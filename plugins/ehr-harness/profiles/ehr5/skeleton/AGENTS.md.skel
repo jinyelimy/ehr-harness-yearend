@@ -1,0 +1,208 @@
+# {{SYSTEM_NAME}} — Project Instructions
+
+Oracle 프로시저 중심의 레거시 인사시스템. DB에 비즈니스 로직이 강하게 존재한다.
+
+## 기술 스택
+
+| 레이어 | 기술 |
+|--------|------|
+| 언어 | Java 8 |
+| 프레임워크 | Spring Boot 2.7.18 |
+| DB 접근 | MyBatis 3 (mybatis-spring-boot-starter 2.3.1) |
+| DB | Oracle (프로시저·트리거·패키지 적극 활용) |
+| 뷰 | JSP + jQuery + IBSheet7 |
+| DI | `@Autowired` 권장. 기존 파일이 `@Inject @Named` 쓰면 해당 파일 패턴 따르기 |
+| 빌드 | Maven (pom.xml) |
+| 핵심 JAR | `isu-core-1.0.jar` (Dao, Interceptor, Log, ParamUtils — 소스 수정 불가) |
+
+## 핵심 패턴: `.do` + `cmd=` 디스패치
+
+이 시스템의 모든 화면은 `.do` URL에 `cmd` 파라미터로 메서드를 라우팅한다.
+
+**법칙 A — 전용 Controller**
+```
+JSP → /VacationApr.do?cmd=getVacationAprList → VacationAprController → VacationAprService → dao.getList("getVacationAprList", paramMap)
+```
+
+**법칙 B — 공통 Controller (GetDataList.do / SaveData.do)**
+```
+JSP → /GetDataList.do?cmd=getXxxList → GetDataListController → dao.getList("getXxxList", paramMap)
+JSP → /SaveData.do?cmd=saveXxx → SaveDataController → dao.update("saveXxx")/dao.delete("deleteXxx")
+```
+`cmd`가 곧 MyBatis 쿼리 ID가 된다.
+
+**법칙 C — 하이브리드 (전용 Controller + AuthTableService)**
+```
+JSP → /SepDcPayMgr.do?cmd=getList → SepDcPayMgrController (@Inject AuthTableService) → authTableService.getAuthQueryMap() → ${query} 주입 → dao.getList(...)
+```
+전용 Controller이면서 AuthTableService를 주입받아 `${query}` 권한을 생성하는 패턴. {{LAW_C_COUNT}}개 컨트롤러가 사용.
+
+**법칙 D — 프로시저 호출 (ExecPrc.do)**
+```
+JSP → /ExecPrc.do?cmd=prcXxx → ExecPrcController → ProDao.excute("prcXxx", paramMap) → CALL P_XXX(OUT, OUT, IN...)
+```
+
+## 파일 구조
+
+```
+src/main/java/com/hr/{module}/...        ← Controller, Service
+src/main/resources/mapper/com/hr/{module}/...  ← *-sql-query.xml (MyBatis 매퍼)
+src/main/webapp/WEB-INF/jsp/{module}/...  ← JSP
+```
+
+## 권한 모델 (자동 감별)
+
+<!-- HARNESS-MANAGED:auth_model -->
+하네스 생성 시점에 프로젝트의 권한 주입 패턴을 실측하여 기록한 결과다. reviewer 에이전트는 이 값을 참조해 조건부 검증을 수행한다.
+
+{{AUTH_MODEL}}
+
+### reviewer 조건부 적용 규칙
+
+- `common_controllers` 에 `GetDataList` 없음 → 법칙 B 체크 생략
+- `auth_service_class` null → 법칙 C 체크 생략
+- `auth_injection_methods` 에 `query_placeholder` 없음 → B5를 `${query}` 대신 `auth_tables` JOIN 검증으로 전환
+- `auth_injection_methods` 비어있음 → B5/R-2 체크를 `#{ssnEnterCd}` WHERE 필터 유무만으로 축소
+<!-- /HARNESS-MANAGED:auth_model -->
+
+## DB 검증 전략 (자동 감별)
+
+<!-- HARNESS-MANAGED:db_verification -->
+{{DB_VERIFICATION}}
+
+reviewer 에이전트의 B3 (컬럼 ↔ DDL) 검증은 `b3_strategy` 에 따라 아래 순서로 동작한다:
+
+1. `ddl-first`: repo의 `ddl_path` 에서 `CREATE TABLE` grep → 있으면 비교, 없으면 DB 조회 → 그래도 없으면 `CHECK` (수동 확인)
+2. `db-only`: DB 조회만. `USER_TAB_COLUMNS` 에서 컬럼명 확인
+3. `manual-required`: 둘 다 불가. reviewer는 B3을 자동으로 `CHECK` 로 보고 수동 확인 요청
+<!-- /HARNESS-MANAGED:db_verification -->
+
+## DDL 자동 작성 (자동 감별)
+
+<!-- HARNESS-MANAGED:ddl_authoring -->
+하네스 생성 시점에 repo의 DDL 폴더 구조를 감별한 결과. screen-builder가 신규 테이블/프로시저/함수 생성 시 참조한다.
+
+{{DDL_AUTHORING}}
+
+### screen-builder 조건부 적용 규칙
+
+- `enabled` = false → screen-builder는 "DBA에게 수동 요청하세요" 안내만 출력
+- `enabled` = true → 각 신규 DB 객체에 대해 사용자 확인 프롬프트 + 이름 수정 옵션 제공
+- `existing_tables` 에 요청 이름이 있음 → "이미 존재하는 테이블. 기존 매퍼 수정 맞나요?" 로 에스컬레이션
+- 치명 네임스페이스 (`P_CPN_*`, `PKG_CPN_*`, `P_HRM_POST*`, `P_TIM_*`, `P_HRI_AFTER_*`) → 자동 생성 차단, 사용자 직접 작성 안내
+<!-- /HARNESS-MANAGED:ddl_authoring -->
+
+---
+
+## 모듈 맵
+
+{{MODULE_MAP}}
+
+## 필수 기술 규칙
+
+- **매퍼 파일명**: `*-sql-query.xml` (NOT `-mapping-query.xml`)
+- **MyBatis 바인딩**: `#{param}` (안전), `${query}` (권한 동적 SQL만)
+- **결과 타입**: `resultType="cMap"` (MapDto — Oracle UPPER_SNAKE → camelCase 자동 변환)
+- **세션 변수**: {{SESSION_VARS}}
+- **권한 주입**: `AuthTableService.getAuthQueryMap()` → `${query}` INNER JOIN
+- **DAO 메서드**: `getList`, `getMap`, `getOne`, `create`, `update`, `delete`, `excute` (오타 유지)
+- **에러 메시지**: 한국어 ("저장 되었습니다.", "조회에 실패 하였습니다.")
+- **MERGE 패턴**: `<foreach item="rm" collection="mergeRows" separator=" UNION ALL ">` + `FROM DUAL`
+- **DELETE 패턴**: `(NULL, NULL)` 센티넬 + `<foreach item="rm" collection="deleteRows">`
+- **프로시저 OUT**: `#{sqlCode,mode=OUT,jdbcType=VARCHAR}`, `#{sqlErrm,mode=OUT,jdbcType=VARCHAR}`
+
+## DB 접근 규칙
+
+- DB 직접 접속 시 **SELECT(조회)만 허용**
+- 프로시저, 함수, 트리거: **사용자가 직접 생성/수정**
+- 더미 데이터, 테스트 데이터: **사용자가 직접 INSERT**
+- AI는 SQL 스크립트를 파일로 작성하여 제공 가능 (직접 실행 금지)
+
+## 치명 프로시저/패키지/트리거 (AI 수정 금지 — 분석·읽기만 가능)
+
+비즈니스 로직이 복잡하게 얽혀 있어, AI가 단독 수정 시 연쇄 장애가 발생할 수 있는 오브젝트.
+수정이 필요하면 분석 결과와 수정 제안을 사용자에게 전달하고, 사용자가 직접 수행한다.
+
+### 등급 정의
+
+| 등급 | 의미 | AI 가능 범위 |
+|------|------|-------------|
+| **치명** | 급여·정산·인사발령 등 핵심 체인. 오류 시 전사 영향 | 읽기·분석만. 수정 제안은 파일로 제공 |
+| **높음** | 연쇄 호출이 있으나 영향 범위가 모듈 내 제한적 | 사용자 승인 후 수정 가능 |
+
+### 치명 등급 — 프로시저
+
+| 프로시저 | 영역 | 위험 |
+|---------|------|------|
+| P_CPN_CAL_PAY_MAIN | 급여 | 급여 계산 메인. 8+ 직접 서브, 100+ 재귀 호출 |
+| P_CPN_CAL_PAY_MAIN 하위 전체 | 급여 | P_CPN_CAL_PAY_MAIN이 참조하는 모든 서브 프로시저 |
+| P_CPN_SMPPYM_EMP | 급여 | 급여 지급 대상 처리 |
+| P_CPN_ORIGIN_TAX_INS | 급여 | 원천세 산출/등록 |
+| P_CPN_YEAREND_MONPAY_YYYY (2025~) | 급여/정산 | 연말정산 월급여 연동 (매년 신규 생성) |
+| P_HRM_POST | 인사 | 인사발령 처리 |
+| P_HRM_POST_DETAIL | 인사 | 인사발령 상세 처리 |
+| P_TIM_WORK_HOUR_CHG | 근태 | 근무시간 변경 |
+| P_HRI_AFTER_PROC_EXEC | 결재 | 신청 후처리 디스패처 (applCd별 분기) |
+| P_HRI_APP_PATH_INS_AUTO_ALL | 결재 | 결재 경로 자동 생성 |
+| P_TIM_VACATION_CLEAN | 근태 | 연차 잔여일수 재계산 |
+| P_TIM_ANNUAL_CREATE | 근태 | 연차 생성 (연간 연차일수 산출·부여) |
+
+### 치명 등급 — 패키지
+
+| 패키지 | 영역 | 위험 |
+|--------|------|------|
+| PKG_CPN_SEP | 급여 | 퇴직금/퇴직연금 계산 패키지 |
+| PKG_CPN_YEA_YYYY_* (2025~) | 정산 | 연말정산 패키지 (매년 신규 생성). `_CODE`, `_DISK`, `_EMP`, `_ERRCHK`, `_SYNC` 등 서브 패키지 포함 |
+| PKG_CPN_PUMP_API | 급여 | 급여 펌프 API 패키지 |
+
+### 치명 등급 — 함수
+
+| 함수 | 영역 | 위험 |
+|------|------|------|
+| WORK_INFO_TEMP | 근태 | 인원의 요일별 근무코드별 근무시간 산출 (P_TIM_WORK_HOUR_CHG가 참조) |
+
+### 치명 등급 — 트리거
+
+{{CRITICAL_PROC}}
+
+### 패턴 규칙: 연도별 자동 확장
+
+아래 패턴의 오브젝트는 **매년 새로 생성**되므로, 최신 연도 포함 모두 치명 등급:
+- `P_CPN_YEAREND_MONPAY_{YYYY}` (2025, 2026, 2027...)
+- `PKG_CPN_YEA_{YYYY}` 및 `PKG_CPN_YEA_{YYYY}_*` (2025, 2026, 2027...)
+
+AI는 위 모든 오브젝트를 직접 수정하지 않는다.
+수정이 필요하면 **분석 보고서 + SQL 스크립트 파일**을 작성하여 사용자에게 전달한다.
+
+## 분석 스냅샷 (자동 감별)
+
+<!-- HARNESS-MANAGED:analysis_snapshot -->
+하네스 생성 시점의 프로젝트 정량 지표. `하네스 점검해줘` 실행 시 이 값과 현재 상태를 비교하여 drift를 보고한다. 수치가 크게 달라지면 재생성이 필요하다는 신호.
+
+{{ANALYSIS_SNAPSHOT}}
+<!-- /HARNESS-MANAGED:analysis_snapshot -->
+
+## 금지 사항
+
+- Anyframe 전용 어노테이션 (프로젝트는 Spring Boot 네이티브)
+- JPA, Hibernate (MyBatis 고정)
+- React/Vue (레거시 화면은 JSP + jQuery + IBSheet7 고정)
+- 영어 에러 메시지 (사용자 언어는 한국어)
+- 회사 코드 하드코딩 (반드시 `#{ssnEnterCd}` 바인드)
+- 그린필드 구현 (반드시 기존 화면을 복제 베이스로)
+
+## 스킬 목록
+
+이 프로젝트에 설치된 도메인 스킬. 각 스킬 파일은 `.claude/skills/` 아래에 위치한다.
+
+- `.claude/skills/ehr-domain-knowledge/SKILL.md` — EHR 도메인 지식 (법칙·권한·패턴)
+- `.claude/skills/ehr-screen-builder/SKILL.md` — 화면 생성 템플릿 (CRUD 코드 예시 포함)
+- `.claude/skills/ehr-codebase-navigator/SKILL.md` — 코드 경로 탐색 + 모듈 맵
+- `.claude/skills/ehr-procedure-tracer/SKILL.md` — 프로시저 체인 분석 + 동적 SQL 추적
+- `.claude/skills/ehr-db-query/SKILL.md` — DB 조회 (SELECT 전용)
+- `.claude/skills/ehr-impact-analyzer/SKILL.md` — 변경 전 영향도 예측 + 수정 권고 판정
+
+## 참고: DB_Object 없음
+
+프로시저/함수/트리거 소스 파일이 이 레포에 없다. Oracle에만 존재한다.
+코드에서 프로시저를 분석하려면 매퍼 XML의 CALL문과 Java 서비스의 `dao.excute()` 호출을 역추적한다.

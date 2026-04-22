@@ -1,0 +1,64 @@
+---
+description: EHR 하네스 축적 데이터로부터 고임팩트 개선 아이디어를 제안한다.
+---
+
+<!-- EHR-COMMAND:BEGIN ideate -->
+# /ehr:ideate — 고임팩트 개선 아이디어 발굴
+
+**프로파일:** {{PROFILE}}
+**대상 시스템 맥락:** 공용 컨트롤러={{COMMON_CONTROLLERS}} / 권한 서비스={{AUTH_SERVICE}}
+
+하네스가 이미 알고 있는 데이터를 역으로 활용해 개선 후보를 제안한다.
+
+## 입력
+- 인자: (선택) 방향 키워드 — 없으면 "전체 스캔"
+  - 예: `/ehr:ideate 성능`, `/ehr:ideate 기술부채`
+
+## 수행 순서
+
+1. **데이터 수집** (읽기 전용):
+   - `reference/CODE_MAP.md` — 컨트롤러·모듈 분포
+   - `reference/DB_MAP.md` — 테이블·프로시저 관계
+   - `skills/domain-knowledge/SKILL.md` — 축적된 패턴 (특히 `## Compounded Patterns`)
+   - `.claude/HARNESS.json.analysis` — `law_counts` · `critical_proc_missing` · `procedure_sample` · `trigger_count`
+
+2. **후보 생성** (최소 5개, 최대 10개):
+   - **기술부채 계열:** `law_counts.D_execPrc` 상위 프로시저 직접 호출 집중 → 서비스 레이어 분해 후보
+   - **누락 분석:** `critical_proc_missing[]` 각 항목별 추적 필요성
+   - **권한 응집도:** `authSqlID[]` 와 `{{AUTH_TABLES}}` 확산 경로
+   - **프로시저 병목:** `procedure_count` 대비 `procedure_sample` 히트율 불균형
+   - **도메인 위반 패턴:** `domain-knowledge` 에 쌓인 패턴 중 코드에 반복 위반 사례
+   - 사용자 입력 방향이 있으면 관련 키워드 우선
+
+3. **Adversarial Filter:** 각 후보에 "이게 왜 좋은 아이디어가 **아닐** 수 있나?" 한 문단. 최소 1개 반대 논거.
+
+4. **임팩트·리스크 점수** (각 1-5):
+   - 임팩트: 유저 영향, 버그 감소, 유지보수 절감
+   - 리스크: 회귀 가능성, 테스트 공수, 도메인 복잡도
+
+5. **출력 저장:** `docs/ehr/ideas/YYYY-MM-DD-<topic>.md` (topic = 방향 키워드 or `scan`)
+
+## 출력 템플릿
+
+```markdown
+# [아이디어] <제목>
+
+- 생성: YYYY-MM-DD (/ehr:ideate <방향>)
+- 프로파일: {{PROFILE}}
+
+## 1. <후보 1 제목>
+- 근거: <HARNESS.json 필드 / CODE_MAP 참조>
+- 임팩트: 4/5 — <왜>
+- 리스크: 2/5 — <왜>
+- 반대 논거: <왜 안 좋은 선택일 수도 있는지>
+- 다음 스텝: `/ehr:plan "..."` 또는 `superpowers:brainstorming`
+
+## 2. <후보 2 제목>
+...
+```
+
+## 금지사항
+- `.ehr-bak/`, `docs/ehr/*`, `EHR-COMPOUND`/`EHR-PROMOTED`/`EHR-PREFERENCES` 블록 수정 금지 (읽기만)
+- 실제 코드 편집 금지 (아이디어 제시만)
+- 외부 네트워크 호출 금지
+<!-- EHR-COMMAND:END ideate -->

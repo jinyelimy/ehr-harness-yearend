@@ -1,0 +1,357 @@
+---
+name: ehr-db-query
+description: "Oracle/Tibero DB SELECT 조회 스킬. 프로시저 소스, 테이블 구조, 데이터 확인 등 DB 직접 조회가 필요할 때 사용한다. 'DB 조회', '프로시저 소스 봐줘', '테이블 구조', 'USER_SOURCE', '컬럼 확인', 'DB에서 확인' 등의 키워드에 트리거."
+---
+
+# DB Query — Oracle/Tibero 조회 전용 스킬
+
+## 제약 조건
+
+- **SELECT만 허용** — INSERT/UPDATE/DELETE/DDL 절대 금지 (`db-read-only` 훅이 차단)
+- DML/DDL이 필요하면 SQL 스크립트를 **파일로 작성**하여 사용자에게 전달
+
+---
+
+## Step 0: DB 모드 판정 (매 호출 시 1회)
+
+하네스 생성 시 Step 2-J에서 결정된 DB 모드를 확인한다. 이 값에 따라
+이 스킬의 동작이 완전히 달라진다.
+
+```bash
+DB_MODE=$(cat .claude/skills/ehr-db-query/DB_MODE 2>/dev/null || echo "code-only")
+DB_VENDOR=$(cat .claude/skills/ehr-db-query/DB_VENDOR 2>/dev/null || echo "oracle")
+echo "DB 모드: $DB_MODE / DB 벤더: $DB_VENDOR"
+```
+
+| 모드 | 이 스킬의 역할 |
+|---|---|
+| `direct` | Oracle/Tibero에 JDBC로 직접 연결해 SELECT 실행 (Step 1~3 사용) |
+| `dump` | DUMP_INDEX.json을 읽어 덤프 폴더 파일을 grep/read로 조회 (Step D 사용) |
+| `code-only` | 이 스킬은 사용 불가 — 사용자에게 "DB 모드가 code-only입니다. `/ehr-harness` 다시 실행 후 [2] 덤프 폴더 선택으로 갱신하세요" 안내 |
+
+---
+
+## DB 테이블 참조
+
+테이블명/설명으로 빠르게 찾을 때 프로젝트 루트의 `DB_MAP.md`를 Read한다.
+CLAUDE.md의 DB prefix맵으로 모듈을 특정한 후, 상세 테이블이 필요하면 DB_MAP.md 참조.
+컬럼 상세는 `db-schema/{MODULE}/tables_doc.sql` 참조.
+
+---
+
+## Step D: DUMP 모드 — 덤프 폴더 기반 조회
+
+`DB_MODE=dump`일 때만 수행. 그 외 모드면 이 섹션 스킵.
+
+### D-1. DUMP_INDEX 로드
+
+```bash
+DUMP_INDEX=".claude/skills/ehr-db-query/DUMP_INDEX.json"
+
+if [ ! -f "$DUMP_INDEX" ]; then
+  echo "⚠ DUMP_INDEX.json이 없습니다. /ehr-harness 다시 실행해주세요."
+  exit 1
+fi
+
+DUMP_DIR=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$DUMP_INDEX','utf8')).dump_dir)")
+FORMAT=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$DUMP_INDEX','utf8')).format)")
+
+echo "덤프 폴더: $DUMP_DIR (형태: $FORMAT)"
+```
+
+### D-2. 객체 lookup
+
+DUMP_INDEX.json의 `objects` 맵에서 이름으로 파일 경로를 조회한다.
+
+```bash
+OBJ_FILE=$(node -e "
+  const idx = JSON.parse(require('fs').readFileSync('$DUMP_INDEX','utf8'));
+  const obj = idx.objects['{객체명}'];
+  if (obj) {
+    console.log(obj.type + '|' + obj.file);
+  } else {
+    console.log('');
+  }
+")
+```
+
+발견 시:
+```
+Read: <파일 경로>
+```
+
+미발견 시 — 인덱스에 없지만 파일은 있을 수 있으므로 grep으로 재탐색:
+```bash
+# 파일명 기반 직접 검색
+find "$DUMP_DIR" -type f -iname "*{객체명}*" 2>/dev/null
+
+# 내용 기반 grep (CREATE 키워드)
+grep -rilE "CREATE\s+(OR\s+REPLACE\s+)?\w+\s+{객체명}" "$DUMP_DIR" 2>/dev/null
+```
+
+### D-3. 자주 쓰는 DUMP 모드 조회 패턴
+
+#### 프로시저 소스 조회
+```bash
+# 1) 인덱스에서 경로 찾기 → 파일 read
+# 2) 또는 grep
+grep -rn "CREATE\s\+OR\s\+REPLACE\s\+PROCEDURE\s\+{프로시저명}" "$DUMP_DIR"
+```
+
+#### 테이블 컬럼 구조
+```bash
+# CREATE TABLE 문에서 컬럼 정의 추출
+grep -A 50 "CREATE\s\+TABLE\s\+{테이블명}" <파일>
+# 또는 파일 전체 읽고 CREATE TABLE 블록 파싱
+```
+
+#### 특정 테이블을 참조하는 객체 검색
+```bash
+grep -rilE "{테이블명}" "$DUMP_DIR" 2>/dev/null
+```
+
+#### 프로시저 내 호출 관계 (서브 프로시저 찾기)
+```bash
+# 해당 프로시저 파일을 읽고, 내부에서 P_/PKG_ 패턴 grep
+grep -oE "(P_|PKG_|F_)\w+" <프로시저 파일> | sort -u
+```
+
+### D-4. DUMP 모드 제약
+
+- **동적 쿼리 불가** — SELECT 실행이 아니라 텍스트 파일 grep이므로 WHERE 조건, JOIN 등 불가
+- **COMMENTS 부재** — DDL 덤프가 COMMENT 문을 포함하지 않는 경우가 많음
+- **런타임 데이터 없음** — 스키마/소스만 확인 가능. 실제 행 데이터는 조회 불가
+- **버전 차이** — 덤프 시점과 운영 DB가 다를 수 있음. 사용자에게 "덤프는 {scanned_at} 기준입니다" 안내
+
+---
+
+## Step 1: 접속 정보 파악
+
+프로젝트의 DB 접속 정보는 아래 파일에 있다. **하드코딩 금지** — 반드시 파일에서 파싱.
+
+### 1순위: `src/main/webapp/META-INF/context.xml`
+
+{{DB_CONNECTION}}
+
+**파싱 규칙:**
+- `url`에서 `log4jdbc:` 제거 → 순수 JDBC URL 추출
+  - Oracle 예: `jdbc:log4jdbc:oracle:thin:@host:port:SID` → `jdbc:oracle:thin:@host:port:SID`
+  - Tibero 예: `jdbc:log4jdbc:tibero:thin:@host:port:DB명` → `jdbc:tibero:thin:@host:port:DB명`
+- URL에 `tibero`가 포함되면 Tibero DB, 그 외는 Oracle
+- `username`, `password` — `${DB_USERNAME}` 같은 변수 참조면 사용자에게 실제 값 확인 요청
+- Resource가 여러 개면 `name="jdbc/ehr"` 기준
+
+### 2순위: `DataSourceConfiguration.java` 또는 `application.properties`
+
+```properties
+spring.datasource.hr.jndi-name=java:/comp/env/jdbc/ehr
+```
+
+JNDI 이름이 context.xml의 Resource name과 매핑된다.
+
+### 3순위: 사용자에게 직접 물어보기
+
+context.xml이 없거나 접속 불가 시, 사용자에게 host/port/SID/계정을 확인 요청.
+
+---
+
+## Step 2: ojdbc 드라이버 위치 확인
+
+```bash
+# 프로젝트 내 JDBC 드라이버 검색 (Oracle + Tibero)
+find . -name "ojdbc*.jar" -o -name "tibero*-jdbc.jar" -o -name "tibero*.jar" 2>/dev/null
+```
+
+일반적 위치:
+- `target/mvn-lib/ojdbc8-21.5.0.0.jar` (Maven 빌드 후)
+- `src/main/webapp/WEB-INF/lib/ojdbc*.jar` (직접 포함 방식)
+- `~/.m2/repository/com/oracle/database/jdbc/ojdbc8/` (Maven 로컬 저장소)
+
+**DB 벤더별 드라이버:**
+
+| 벤더 | JAR 파일 | 드라이버 클래스 | URL 형식 |
+|------|---------|--------------|---------|
+| Oracle | `ojdbc8.jar`, `ojdbc6.jar` | `oracle.jdbc.OracleDriver` | `jdbc:oracle:thin:@{host}:{port}:{SID}` |
+| Tibero | `tibero6-jdbc.jar`, `tibero7-jdbc.jar` | `com.tmax.tibero.jdbc.TbDriver` | `jdbc:tibero:thin:@{host}:{port}:{DB명}` |
+
+> context.xml URL에 `tibero`가 포함되어 있으면 Tibero 드라이버를 사용한다. `DB_VENDOR` 파일로 자동 판별됨.
+
+---
+
+## Step 3: 쿼리 실행
+
+`_workspace/` 디렉토리에 Java 파일을 생성하여 실행한다.
+
+### 템플릿: 범용 SELECT 실행기
+
+```java
+import java.sql.*;
+
+public class DbQuery {
+    public static void main(String[] args) throws Exception {
+        // -- 접속 정보 (context.xml에서 파싱, DB_VENDOR에 따라 자동 분기) --
+        String vendor = "{DB_VENDOR}"; // "oracle" 또는 "tibero"
+        String host = "{HOST}";
+        String port = "{PORT}";
+        String sid  = "{SID}";
+        String user = "{USERNAME}";
+        String pass = "{PASS}";
+
+        // 벤더별 JDBC URL + 드라이버 자동 설정
+        String url;
+        if ("tibero".equals(vendor)) {
+            Class.forName("com.tmax.tibero.jdbc.TbDriver");
+            url = "jdbc:tibero:thin:@" + host + ":" + port + ":" + sid;
+        } else {
+            Class.forName("oracle.jdbc.OracleDriver");
+            url = "jdbc:oracle:thin:@" + host + ":" + port + ":" + sid;
+        }
+
+        String sql = args.length > 0 ? args[0]
+            : "SELECT TABLE_NAME FROM USER_TABLES ORDER BY TABLE_NAME";
+
+        DriverManager.setLoginTimeout(10);
+        try (Connection conn = DriverManager.getConnection(url, user, pass);
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            ResultSetMetaData meta = rs.getMetaData();
+            int cols = meta.getColumnCount();
+
+            // 헤더
+            for (int i = 1; i <= cols; i++) {
+                System.out.print(meta.getColumnName(i));
+                if (i < cols) System.out.print("\t");
+            }
+            System.out.println();
+
+            // 데이터
+            int rowCount = 0;
+            while (rs.next()) {
+                for (int i = 1; i <= cols; i++) {
+                    System.out.print(rs.getString(i));
+                    if (i < cols) System.out.print("\t");
+                }
+                System.out.println();
+                if (++rowCount >= 500) {
+                    System.out.println("... (500행 제한)");
+                    break;
+                }
+            }
+            System.out.println("[총 " + rowCount + "행]");
+        }
+    }
+}
+```
+
+### 컴파일 & 실행
+
+```bash
+# DB_VENDOR에 따라 자동 선택
+DRIVER_JAR=$(find . -name "ojdbc*.jar" -o -name "tibero*-jdbc.jar" -o -name "tibero*.jar" 2>/dev/null | head -1)
+echo "드라이버: $DRIVER_JAR"
+
+javac -cp "$DRIVER_JAR" _workspace/DbQuery.java
+java -cp "$DRIVER_JAR;_workspace" DbQuery "SELECT ..."
+```
+
+> Windows: classpath 구분자 `;` / Linux·Mac: `:`
+
+---
+
+## 자주 쓰는 조회 패턴
+
+### 프로시저/패키지 소스 조회
+
+```sql
+SELECT LINE, TEXT FROM USER_SOURCE
+WHERE NAME = '{프로시저명}' AND TYPE IN ('PROCEDURE','PACKAGE BODY')
+ORDER BY LINE
+```
+
+### 테이블 컬럼 구조
+
+```sql
+SELECT COLUMN_NAME, DATA_TYPE, DATA_LENGTH, NULLABLE, DATA_DEFAULT
+FROM USER_TAB_COLUMNS WHERE TABLE_NAME = '{테이블명}'
+ORDER BY COLUMN_ID
+```
+
+### 테이블 코멘트
+
+```sql
+SELECT COLUMN_NAME, COMMENTS
+FROM USER_COL_COMMENTS WHERE TABLE_NAME = '{테이블명}'
+ORDER BY COLUMN_NAME
+```
+
+### 프로시저 내 호출 관계 (서브 프로시저 찾기)
+
+```sql
+SELECT DISTINCT
+  REGEXP_SUBSTR(TEXT, '(P_\w+|PKG_\w+)', 1, 1) AS CALLED_PROC
+FROM USER_SOURCE
+WHERE NAME = '{프로시저명}' AND TYPE IN ('PROCEDURE','PACKAGE BODY')
+  AND REGEXP_LIKE(TEXT, '(P_\w+|PKG_\w+)')
+  AND LINE > 1
+ORDER BY 1
+```
+
+### 특정 테이블을 참조하는 프로시저 목록
+
+```sql
+SELECT DISTINCT NAME, TYPE
+FROM USER_SOURCE
+WHERE UPPER(TEXT) LIKE '%{테이블명}%'
+  AND TYPE IN ('PROCEDURE','PACKAGE BODY','FUNCTION','TRIGGER')
+ORDER BY TYPE, NAME
+```
+
+### 패키지 바디 목록 + 라인 수
+
+```sql
+SELECT NAME, COUNT(*) AS LINES
+FROM USER_SOURCE
+WHERE TYPE = 'PACKAGE BODY' AND NAME LIKE '{패턴}%'
+GROUP BY NAME ORDER BY NAME
+```
+
+---
+
+## UPDATE 제안 시 3단계 안전 템플릿
+
+AI는 직접 UPDATE를 실행할 수 없다 (hooks 에서 차단됨). UPDATE가 필요한 경우 아래 3단계 형식으로 SQL 스크립트를 제안한다:
+
+```sql
+-- Step 1: 변경 전 확인 (사용자가 직접 실행)
+SELECT 대상컬럼들
+  FROM 테이블
+ WHERE 조건;
+
+-- Step 2: 변경 실행
+UPDATE 테이블
+   SET 컬럼 = 값
+ WHERE 조건;
+-- COMMIT; (확인 후 주석 해제)
+
+-- Step 3: 변경 후 검증
+SELECT 대상컬럼들
+  FROM 테이블
+ WHERE 조건;
+-- 기대값과 일치하면 COMMIT, 아니면 ROLLBACK
+```
+
+**규칙:**
+- WHERE 조건에 반드시 PK(ENTER_CD, SABUN, PAY_ACTION_CD 등)를 명시
+- Step 1과 Step 3의 SELECT는 동일해야 변경 전후 비교 가능
+- COMMIT은 주석 처리하여 사용자가 확인 후 직접 실행하도록 유도
+
+---
+
+## 주의사항
+
+1. **500행 제한** — 대량 데이터는 WHERE 조건으로 좁혀서 조회
+2. **접속 타임아웃 10초** — VPN 미연결 시 실패하므로 사용자에게 네트워크 확인 요청
+3. **CLOB 컬럼** — `rs.getString()`으로 읽히지만 매우 긴 경우 잘릴 수 있음
+4. **_workspace/ 파일** — 실행 후 삭제하지 않아도 됨 (gitignore 대상)
+5. **비밀번호** — Java 파일에 적힌 비밀번호는 개발DB 전용. 운영DB 절대 금지

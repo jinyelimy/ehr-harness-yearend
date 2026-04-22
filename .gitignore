@@ -1,0 +1,16 @@
+# OS / 에디터
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*~
+.idea/
+.vscode/
+
+# 내부 설계/계획 문서 (repo에 푸시하지 않음)
+docs/superpowers/plans/
+docs/superpowers/specs/
+
+# Claude Code 세션 로그 / 상태 파일 (커밋 제외)
+.omx/
+.gstack/

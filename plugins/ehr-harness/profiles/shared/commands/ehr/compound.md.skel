@@ -1,0 +1,142 @@
+---
+description: 세션·커밋에서 새 사실/패턴/선호를 추출해 L2 지식(reference, domain-knowledge) 또는 L3 프롬프트(agents/skills) 에 회수한다.
+---
+
+<!-- EHR-COMMAND:BEGIN compound -->
+# /ehr:compound — 지식 회수 (L2 기본 / L3 옵션 / 선호 학습)
+
+**프로파일:** {{PROFILE}}
+
+CE 사이클의 **닫힘점**. 세션 컨텍스트 + 최근 커밋 diff 에서 "새로 알게 된 것"을 추출해 하네스 자산으로 회수한다. 쓸수록 하네스가 두꺼워지는 폐곡선의 핵심.
+
+## 입력
+- (선택) 인자: 요약 한 줄 — 없으면 자동 추출
+- 플래그:
+  - `--promote-to-skill <id>` — L3 승급 (에이전트/스킬 프롬프트 편집)
+  - `--revert-promotion <id>` — L3 되돌리기
+  - `--revert-preference <KEY>` — 선호 되돌리기
+  - `--set <KEY>=<VAL>` — 선호 직접 설정
+  - `--reindex` — 드리프트 복구 (HARNESS.json ↔ 파일 재동기화)
+
+## 동시성 lock
+
+실행 시작 직후 `.claude/.ehr-lock` 파일을 생성 (내용 = PID). 종료 시 반드시 제거.
+이미 있으면 중복 실행 차단하고 안내 후 종료.
+
+---
+
+## 수행 순서 (기본 경로, 플래그 없음)
+
+### 1. 후보 추출
+- 세션 컨텍스트 전체 스캔
+- git 있을 때: `git log -p -5 HEAD`
+- 현재 워킹트리 diff (`git status`, 파일 목록)
+- 사용자 발화 중 선호 패턴 (`SUGGEST_MODE`, `FILE_THRESHOLD`, `VERBOSE_EXPLANATION` 후보)
+
+### 2. 분류 (도메인별 매핑)
+- **팩트** (구체 식별자·매핑·수치) → `reference/CODE_MAP.md` 또는 `reference/DB_MAP.md`
+- **패턴** (판단·규칙·근거) → `skills/domain-knowledge/SKILL.md`
+- **선호** (명령·금지 발화) → `CLAUDE.md` 의 `EHR-PREFERENCES` 블록
+
+### 3. 사용자 확인 (체크박스 표)
+
+```
+회수 후보:
+[x] 1. (팩트)   PayCalcController.calculate() → P_CPN_CAL_PAY_MAIN
+                → reference/CODE_MAP.md  (id: 2026-04-18-paycalc-trigger)
+[x] 2. (패턴)   급여 마감 후 PAY_BASE 직접 UPDATE 금지
+                → skills/domain-knowledge/SKILL.md  (id: pay-closing-no-direct-update)
+[ ] 3. (선호)   SUGGEST_MODE: ask → silent (트리거: "역질문하지마")
+계속 진행? (y/n/edit)
+```
+
+### 4. 기록 (마커 머지)
+- `lib/ehr-compound.sh` 의 `ehr_compound_upsert` 호출
+- 신규 id → 섹션 말미에 새 `EHR-COMPOUND` 블록 추가
+- 기존 id → 블록 덮어쓰기 + `HARNESS.json.ehr_cycle.compounds[].revision` +1
+
+### 5. 선호 갱신 (선호 후보 채택 시)
+- `CLAUDE.md` 의 `EHR-PREFERENCES` 블록을 파싱 (key=value)
+- 값 업데이트 + `# history` 주석 아래 "YYYY-MM-DD KEY: old → new (트리거: \"...\")" append
+- `HARNESS.json.ehr_cycle.preferences_history[]` 엔트리 추가
+
+### 6. HARNESS.json 갱신
+- `ehr_cycle.compounds[]` 에 신규 엔트리 추가
+- (L3 도 함께면 `promoted[]` 도 갱신)
+
+### 7. L3 자동 승급 후보 안내 (실행 아님)
+- `revision ≥ AUTO_PROMOTE_AFTER` (기본 3) 에 도달한 id 가 있으면:
+```
+자동 승급 후보: pay-closing-no-direct-update (revision=3)
+→ /ehr:compound --promote-to-skill pay-closing-no-direct-update 로 L3 승격 가능
+```
+
+### 8. 백업 자동 정리 (`BACKUP_RETENTION_DAYS > 0` 일 때)
+- `.ehr-bak/*` 파일의 mtime 이 오늘 기준 `BACKUP_RETENTION_DAYS` 일 이상 경과했고, 해당 백업을 가리키는 `HARNESS.json.ehr_cycle.promoted[]` 엔트리에 `retain: true` 가 아니면:
+  - 파일 삭제
+  - `.ehr-bak/cleanup-log.md` 에 기록 (id, 원본, 삭제 시각)
+  - `HARNESS.json.ehr_cycle.promoted[].backup_cleaned = true`
+
+### 9. git 감지 시 `git add` 제안 (커밋은 사용자 판단)
+
+---
+
+## 플래그별 경로
+
+### `--promote-to-skill <id>`
+1. `compounds[id].revision < 1` 이면 에러 ("L2 기록 없음")
+2. 대상 파일 선정 (AI 판단):
+   - 급여·근태·권한 패턴 → `agents/release-reviewer.md` 우선
+   - DB 특화 패턴 → `agents/db-impact-reviewer.md`
+   - 일반 EHR 지식 → 해당 도메인 스킬 `SKILL.md`
+3. 해당 파일을 `.ehr-bak/<file>.YYYYMMDDTHHMMSS.bak` 로 백업 (mkdir -p 포함)
+4. 편집 diff 생성 → 사용자에게 제시 → 승인받으면 실행
+5. `EHR-PROMOTED` 블록으로 삽입 (id + `src_compound_id` + `promoted_at` 속성)
+6. `HARNESS.json.ehr_cycle.promoted[]` 엔트리 추가
+
+### `--revert-promotion <id>`
+1. `promoted[id].backup` 경로 확인
+2. `backup_cleaned == true` 이면 에러 (복원 불가)
+3. 현재 파일의 해당 `EHR-PROMOTED` 블록 제거 (`ehr_compound_remove`)
+4. 백업 파일에서 원본 `EHR-PROMOTED` 블록이 있었으면 복원, 없으면 제거된 상태 유지
+5. `promoted[]` 에서 엔트리 제거
+
+### `--revert-preference <KEY>`
+1. `preferences_history[]` 를 역순으로 스캔해 해당 KEY 의 가장 최근 엔트리 찾기
+2. 값을 `to → from` 으로 되돌림 (history 주석에 "revert" 기록 추가)
+3. 새 엔트리 `preferences_history[]` 에 추가 (자동 되돌림 기록)
+
+### `--set <KEY>=<VAL>`
+1. `EHR-PREFERENCES` 허용 키 + 값 범위 검증 (허용치 외는 거부, 사용자에게 설명)
+2. 블록 내 값 업데이트 + history 주석 append
+3. `preferences_history[]` 엔트리 추가
+
+### `--reindex`
+1. 타깃 프로젝트 스캔: 모든 `EHR-COMPOUND` / `EHR-PROMOTED` 블록의 id 수집 (`ehr_compound_list` 활용)
+2. `HARNESS.json.ehr_cycle.compounds[]` / `promoted[]` 와 교차 비교
+3. 불일치 유형 4종 리포트: Orphan compound / Orphan marker / Stale promotion / Preferences corruption
+4. 사용자 승인 시 HARNESS.json 자동 수정 (Orphan marker → compounds[] 에 추가, Orphan compound → compounds[] 에서 제거)
+
+---
+
+## 안전장치
+
+- **동시성 lock**: `.claude/.ehr-lock` 파일 생성·해제. 중복 실행 시 안내 후 종료.
+- **경로 방어**: L3 편집은 타깃 프로젝트 내부만. `plugins/**` 경로 접근 시 abort.
+- **백업 필수**: L3 편집 전 백업 생성. 실패 시 편집 abort.
+- **총량 제한**: 한 파일당 `EHR-PROMOTED` 블록 5개 초과 시 통합 제안 (자동 거부 아님).
+- **`EHR-PREFERENCES` 값 검증**:
+  - `FILE_THRESHOLD` ∈ [1, 50]
+  - `SUGGEST_MODE` ∈ {ask, silent, suggest-major-only}
+  - `VERBOSE_EXPLANATION` ∈ {true, false}
+  - `AUTO_PROMOTE_AFTER` ∈ [1, 20]
+  - `BACKUP_RETENTION_DAYS` ∈ [0, 365]
+- **4대 불변식 준수**: `/ehr:compound` 는 L2/L3 를 기록하지만, **사용자가 마커 밖에 적은 내용은 절대 건드리지 않는다**.
+
+## 출력
+
+- 회수된 항목 목록 + 대상 파일 (id 포함)
+- L3 승급 후보 안내 (있을 때)
+- 백업 정리 결과 (있을 때)
+- 다음 단계: `git add` 명령 (git 감지 시)
+<!-- EHR-COMMAND:END compound -->
