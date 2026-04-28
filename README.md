@@ -21,6 +21,21 @@
 
 ---
 
+## `ehr-yearend-harness` 구성 요소 (요약)
+
+| 종류 | 이름 | 한 줄 |
+|------|------|------|
+| 스킬 | `yearend-domain-map` | 도메인 지식 조회 ("TCPN843 이 뭐야?") |
+| 스킬 | `yearend-chain-tracer` | 영향 범위 추적 ("이 컬럼 고치면 어디 영향?") |
+| 스킬 | `yearend-plan-first` ★ | 변경 작업 정책 (Step 0~4, 사용자 승인 후 수정) |
+| 에이전트 | `yearend-investigator` | 서술형 조사·플랜 초안 ("개정세법 영향도 봐줘") |
+| 훅 | `db-read-only` (자동 등록) | DB 변경 자동 차단, `SELECT`/`WITH`/`EXPLAIN`/`DESC` 만 허용 |
+| references | tables / packages / close-chain / glossary | yjungsan 사실 사전 4개 |
+
+> 각 컴포넌트의 자세한 발동 시점·동작·정의 위치는 [`plugins/ehr-yearend-harness/README.md`](./plugins/ehr-yearend-harness/README.md) 의 *구성 요소* 섹션 참고.
+
+---
+
 ## 설치 — `ehr-yearend-harness` 단독 (한 줄)
 
 타깃 EHR 프로젝트(예: `EHR_HR50`)에서 Claude Code 를 켠 뒤:
