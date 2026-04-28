@@ -4,8 +4,7 @@
     "name": "minseok kim"
   },
   "metadata": {
-    "description": "EHR4/5 하네스 자동 생성 플러그인",
-    "pluginRoot": "./plugins"
+    "description": "EHR4/5 하네스 자동 생성 플러그인 + 도메인 패키지"
   },
   "plugins": [
     {
