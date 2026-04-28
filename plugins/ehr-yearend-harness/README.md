@@ -190,6 +190,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/link-to-target.ps1 `
 - 적용 대상: yearend 도메인의 코드/DDL/스키마 변경 요청 (예: "이 버그 hotfix", "패키지 본문 수정")
 - 적용 외: 단순 조회·도메인 질의·영향 분석 (즉시 답변)
 
+> **Step 0 의 깊이 (중요)**: 단순 키워드 매칭만으로는 이미 반영된 변경분을 놓치기 쉽다. 본 정책의 Step 0 는 5개 sub-step 을 모두 거친다 — (0-A) `git log`/`git blame` 으로 변경 이력 우선 확인, (0-B) [`references/yjungsan-glossary.md`](references/yjungsan-glossary.md) 의 도메인 동의어 사전으로 키워드 확장, (0-C) 변경 표기(`(YYYY.MM.DD)`, `// 추가`) 별도 grep, (0-D) 사용자 메시지의 트리거 단어("추가", "개선", "이미") 감지, (0-E) 결과를 0%/부분/충분 셋 중 하나로 판정. 부분 반영 흔적이 있으면 Case B 로 멋대로 점프하지 않고 사용자에게 먼저 확인.
+
 > 정책 우회: 진짜 비상 상황에서 사용자가 직접 `Edit`/`Write` 도구를 호출하거나 메시지에 `[plan-first 우회]` 라고 명시한 경우에만 우회된다.
 
 ---
