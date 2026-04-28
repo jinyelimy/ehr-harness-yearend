@@ -3,11 +3,11 @@
     Yearend Harness source to target .claude/ sync (for environments where junctions don't work).
 
 .DESCRIPTION
-    Copy all items from drafts/yearend-harness/skills/* and agents/*.md to target .claude/skills/ and .claude/agents/.
+    Copy all items from plugins/ehr-yearend-harness/skills/* and agents/*.md to target .claude/skills/ and .claude/agents/.
     Similar to robocopy /MIR, files in target are removed if they don't exist in source.
 
 .PARAMETER SourceRoot
-    Absolute path to drafts/yearend-harness (parent directory of SKILLs).
+    Absolute path to plugins/ehr-yearend-harness (parent directory of SKILLs).
     Note: Task 9 test calls this with skills/ and agents/ directly under $srcRoot.
 
 .PARAMETER TargetClaudeDir

@@ -14,6 +14,13 @@
       "description": "EHR4/5 프로젝트용 AI 코딩 하네스 자동 생성기. '하네스 만들어줘' 한 마디로 프로젝트를 분석하고 맞춤형 하네스를 생성한다.",
       "version": "1.9.4",
       "keywords": ["ehr", "harness", "hr", "legacy", "oracle"]
+    },
+    {
+      "name": "ehr-yearend-harness",
+      "source": "./plugins/ehr-yearend-harness",
+      "description": "연말정산(yjungsan) 도메인 전용 Claude Code 스킬·에이전트 패키지. EHR 프로젝트 위에 추가 설치한다.",
+      "version": "0.1.0",
+      "keywords": ["ehr", "yearend", "yjungsan", "tax-settlement"]
     }
   ]
 }

@@ -1,0 +1,5 @@
+{
+  "name": "ehr-yearend-harness",
+  "description": "연말정산(yjungsan) 도메인 전용 Claude Code 스킬·에이전트 패키지. EHR 프로젝트 위에 추가 설치하면 yjungsan 테이블·패키지·마감 체인 도메인 지식과 영향 분석을 자동 제공한다.",
+  "version": "0.1.0"
+}

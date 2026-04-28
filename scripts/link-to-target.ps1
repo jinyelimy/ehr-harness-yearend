@@ -2,15 +2,15 @@
 .SYNOPSIS
     Yearend Harness 瑜??源?EHR ?꾨줈?앺듃??.claude/ ???뺤뀡?쇰줈 ?곌껐?쒕떎.
 .DESCRIPTION
-    drafts/yearend-harness/skills/* 怨?agents/* ???源?.claude/skills/ 諛?.claude/agents/
+    plugins/ehr-yearend-harness/skills/* 怨?agents/* ???源?.claude/skills/ 諛?.claude/agents/
     ?꾨옒??Windows directory junction ?쇰줈 ?곌껐?쒕떎. ?먯씠?꾪듃 md ?뚯씪? ?붾젆?곕━媛 ?꾨땲誘濡?    ?뺤뀡 ????섎뱶留곹겕(mklink /H) 濡??곌껐?쒕떎.
 .PARAMETER SourceRoot
-    drafts/yearend-harness ???덈? 寃쎈줈.
+    plugins/ehr-yearend-harness ???덈? 寃쎈줈.
 .PARAMETER TargetClaudeDir
     ?源??꾨줈?앺듃??.claude ?붾젆?곕━ ?덈? 寃쎈줈.
 .EXAMPLE
     .\scripts\link-to-target.ps1 `
-        -SourceRoot   "C:\yelingg\ehr-harness-yearend\drafts\yearend-harness" `
+        -SourceRoot   "C:\yelingg\ehr-harness-yearend\plugins\ehr-yearend-harness" `
         -TargetClaudeDir "C:\Users\jinyelimy\isu-hr\EHR_HR50\.claude"
 #>
 param(
