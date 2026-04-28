@@ -164,6 +164,34 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/link-to-target.ps1 `
 
 > 원본 `ehr-harness` 플러그인을 같이 깔아 "하네스 만들어줘" 까지 실행한 경우, 동일 훅이 타깃 프로젝트의 `.claude/hooks/` 에도 한 번 더 복사된다. 같은 검사가 두 번 도는 정도라 안전성에 문제는 없으나, 원본 플러그인을 안 쓰는 환경에서는 본 훅이 단독으로 안전장치를 제공한다.
 
+### 5.5 Plan-First 정책 — 코드 변경은 항상 plan 후 승인
+
+본 플러그인을 깔면 yearend 도메인의 **코드/DDL/스키마 변경 요청** 은 자동으로 다음 흐름을 따른다. (`yearend-plan-first` 스킬이 발동.)
+
+```
+사용자 요청 ("출산지원금 반영해줘", "이 패키지 본문 고쳐줘" 등)
+    │
+    ▼
+[Step 0] 현 상태 확인  ← 요청 사항이 이미 반영됐는지 직접 검사
+    │
+    ├─ 이미 반영됨 → "이미 <파일:라인> 에 <방식> 으로 반영됨,
+    │                  보고된 증상은 <별도 원인> 으로 추정" 보고 후 종료 (수정 X)
+    │
+    └─ 반영 안 됨
+            │
+            ▼
+        [Step 1] 영향 분석 (yearend-chain-tracer)
+        [Step 2] 변경 plan 제시 (대상 파일:line, 리스크, 검증 방법)
+        [Step 3] 사용자 명시적 승인 ("이대로 진행할까요? Y/N")
+        [Step 4] Edit/Write 호출 + 검증 가이드
+```
+
+- 정책 정의: [`skills/yearend-plan-first/SKILL.md`](skills/yearend-plan-first/SKILL.md)
+- 적용 대상: yearend 도메인의 코드/DDL/스키마 변경 요청 (예: "이 버그 hotfix", "패키지 본문 수정")
+- 적용 외: 단순 조회·도메인 질의·영향 분석 (즉시 답변)
+
+> 정책 우회: 진짜 비상 상황에서 사용자가 직접 `Edit`/`Write` 도구를 호출하거나 메시지에 `[plan-first 우회]` 라고 명시한 경우에만 우회된다.
+
 ---
 
 ## 6. 범위 제외 (Out of Scope)
