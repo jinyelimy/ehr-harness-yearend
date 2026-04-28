@@ -1,10 +1,10 @@
 {
-  "name": "ehr-harness",
+  "name": "ehr-harness-yearend",
   "owner": {
     "name": "minseok kim"
   },
   "metadata": {
-    "description": "EHR4/5 하네스 자동 생성 플러그인 + 도메인 패키지"
+    "description": "EHR4/5 범용 하네스 자동 생성기 (원본) + 연말정산 도메인 전용 패키지를 함께 제공하는 fork marketplace"
   },
   "plugins": [
     {

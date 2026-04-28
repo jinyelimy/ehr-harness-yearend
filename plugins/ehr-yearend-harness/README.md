@@ -111,11 +111,11 @@ plugins/ehr-yearend-harness/
 
 ```
 /plugin marketplace add C:\yelingg\ehr-harness-yearend
-/plugin install ehr-yearend-harness@ehr-harness
+/plugin install ehr-yearend-harness@ehr-harness-yearend
 ```
 
 > `marketplace add` 인자는 본 레포 위치(로컬 경로 또는 GitHub URL).
-> `@ehr-harness` 는 marketplace 이름(`./.claude-plugin/marketplace.json` 의 `name`).
+> `@ehr-harness-yearend` 는 marketplace 이름(`./.claude-plugin/marketplace.json` 의 `name`).
 
 설치 결과: 타깃 Claude Code 가 본 패키지의 스킬·에이전트·references 를
 자동 인식한다. 별도 정션이나 복사 불필요.
@@ -157,7 +157,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/link-to-target.ps1 `
 
 허용: `SELECT`, `WITH`, `EXPLAIN`, `DESC` 만. 훅 자체 에러도 차단(fail-closed).
 
-별도 설정 불필요 — `/plugin install ehr-yearend-harness@ehr-harness` 한 번이면 끝.
+별도 설정 불필요 — `/plugin install ehr-yearend-harness@ehr-harness-yearend` 한 번이면 끝.
 
 - 훅 정의: `<plugin>/hooks/hooks.json`
 - 훅 스크립트: `<plugin>/scripts/db-read-only.sh` (원본 `ehr-harness` 의 동일 훅)

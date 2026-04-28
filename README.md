@@ -214,14 +214,14 @@ git clone https://github.com/qoxmfaktmxj/ehr-harness-plugin.git ~/Desktop/dev/eh
 #    /plugin marketplace add ~/dev/ehr-harness-yearend
 
 # 2. 두 플러그인 설치
-/plugin install ehr-harness@ehr-harness          # 원본 범용 하네스
-/plugin install ehr-yearend-harness@ehr-harness  # 연말정산 도메인 전용 (이 fork 에서 추가)
+/plugin install ehr-harness@ehr-harness-yearend          # 원본 범용 하네스 (본 fork 의 marketplace 안에 같이 들어있음)
+/plugin install ehr-yearend-harness@ehr-harness-yearend  # 연말정산 도메인 전용 (이 fork 에서 추가)
 
 # 3. superpowers 설치 (ehr-harness 사용 시 필수)
 /plugin install superpowers@claude-plugins-official
 ```
 
-> 명령어 끝의 **`@ehr-harness`** 는 marketplace 이름(`.claude-plugin/marketplace.json` 의 `name` 필드 — 원본을 따라감)이고, 그 앞의 `ehr-harness` / `ehr-yearend-harness` 가 플러그인 이름이다. 즉 "`ehr-yearend-harness` 라는 플러그인이 `ehr-harness` 라는 marketplace 안에 들어 있다" 는 뜻.
+> 명령어 끝의 **`@ehr-harness-yearend`** 는 **marketplace 이름**(본 fork 의 `.claude-plugin/marketplace.json` 의 `name` 필드 — 원본 `ehr-harness` marketplace 와 구분하기 위해 fork 이름을 따름). 그 앞의 `ehr-harness` / `ehr-yearend-harness` 는 **플러그인 이름**이다. 즉 "`ehr-yearend-harness` 라는 플러그인이 `ehr-harness-yearend` 라는 marketplace(창고) 안에 들어 있다" 는 뜻.
 
 #### 3-1. 변경 검증용 — 워크트리에서 직접 시도
 
@@ -230,7 +230,7 @@ git clone https://github.com/qoxmfaktmxj/ehr-harness-plugin.git ~/Desktop/dev/eh
 ```bash
 # 예시 — 현재 본인 환경의 워크트리 경로
 /plugin marketplace add C:\yelingg\ehr-harness-yearend\.claude\worktrees\competent-hertz-7d0fa9
-/plugin install ehr-yearend-harness@ehr-harness
+/plugin install ehr-yearend-harness@ehr-harness-yearend
 ```
 
 #### 3-2. 설치 검증
@@ -251,8 +251,8 @@ TCPN843 이 뭐야?
 
 ```bash
 /plugin marketplace add <이-fork-의-GitHub-URL-또는-공유-경로>
-/plugin install ehr-harness@ehr-harness
-/plugin install ehr-yearend-harness@ehr-harness
+/plugin install ehr-harness@ehr-harness-yearend
+/plugin install ehr-yearend-harness@ehr-harness-yearend
 /plugin install superpowers@claude-plugins-official
 ```
 
