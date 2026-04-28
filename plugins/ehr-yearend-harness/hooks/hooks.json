@@ -1,0 +1,16 @@
+{
+  "description": "DB 직접 변경 차단 — sqlplus/sqlcl/sqlcmd/tibero/tbsql 명령에서 DML/DDL/PL-SQL/시스템 패키지 키워드를 감지하여 차단. SELECT/WITH/EXPLAIN/DESC 만 허용. Fail-closed.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/db-read-only.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

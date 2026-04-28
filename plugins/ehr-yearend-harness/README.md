@@ -143,6 +143,27 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/link-to-target.ps1 `
 
 정션 불가 환경(권한·DevDrive 미사용 등)에서는 `sync-to-target.ps1` 로 복사 사용.
 
+### 5.4 안전 장치 — DB 변경 자동 차단 (자동 등록)
+
+본 플러그인은 설치 시 **PreToolUse(Bash) 훅 한 개**가 함께 등록되어, `sqlplus`·`sqlcl`·`sqlcmd`·`tibero`·`tbsql`·`impdp`·`expdp`·`rman` 명령으로 들어가는 SQL 중 다음을 자동 차단한다.
+
+| 분류 | 차단 키워드 |
+|------|------------|
+| DML/DDL | `DROP`, `TRUNCATE`, `DELETE`, `UPDATE`, `INSERT`, `MERGE`, `ALTER`, `CREATE`, `GRANT`, `REVOKE`, `UPSERT` |
+| 실행 | `EXEC`, `EXECUTE`, `CALL` |
+| PL/SQL 블록 | `DECLARE`, `BEGIN` |
+| 시스템 패키지 | `DBMS_*`, `UTL_*` |
+| 스크립트 파일 | `@script.sql` 패턴 (내용 검증 불가 → 보수적 차단) |
+
+허용: `SELECT`, `WITH`, `EXPLAIN`, `DESC` 만. 훅 자체 에러도 차단(fail-closed).
+
+별도 설정 불필요 — `/plugin install ehr-yearend-harness@ehr-harness` 한 번이면 끝.
+
+- 훅 정의: `<plugin>/hooks/hooks.json`
+- 훅 스크립트: `<plugin>/scripts/db-read-only.sh` (원본 `ehr-harness` 의 동일 훅)
+
+> 원본 `ehr-harness` 플러그인을 같이 깔아 "하네스 만들어줘" 까지 실행한 경우, 동일 훅이 타깃 프로젝트의 `.claude/hooks/` 에도 한 번 더 복사된다. 같은 검사가 두 번 도는 정도라 안전성에 문제는 없으나, 원본 플러그인을 안 쓰는 환경에서는 본 훅이 단독으로 안전장치를 제공한다.
+
 ---
 
 ## 6. 범위 제외 (Out of Scope)
