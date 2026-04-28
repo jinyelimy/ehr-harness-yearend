@@ -42,9 +42,21 @@ ehr-harness-yearend/
 │   └── ehr-yearend-harness/         ← (추가) 연말정산 도메인 전용 v0.1.0
 │       ├── .claude-plugin/plugin.json
 │       ├── README.md                ← 패키지 자체 설계·사용 가이드
-│       ├── references/              ← yjungsan 테이블·패키지·마감 체인 사전
-│       ├── skills/                  ← yearend-domain-map / yearend-chain-tracer
-│       └── agents/                  ← yearend-investigator
+│       ├── references/              ← yjungsan 사실 사전 4개
+│       │   ├── yjungsan-tables.md          (테이블 22개)
+│       │   ├── yjungsan-packages.md        (패키지 6 + 독립 프로시저 7)
+│       │   ├── yjungsan-close-chain.md     (마감 체인)
+│       │   └── yjungsan-glossary.md        (표면 표현 ↔ 코드 식별자 동의어)
+│       ├── skills/                  ← 자동 발동 스킬 3개
+│       │   ├── yearend-domain-map/         (지식 조회)
+│       │   ├── yearend-chain-tracer/       (영향 분석)
+│       │   └── yearend-plan-first/         (변경 작업 라우터, plan-first 정책)
+│       ├── agents/
+│       │   └── yearend-investigator.md     (조사·플랜 초안)
+│       ├── hooks/
+│       │   └── hooks.json                  (PreToolUse Bash 훅 자동 등록)
+│       └── scripts/
+│           └── db-read-only.sh             (DML/DDL 차단, SELECT만 허용)
 ├── scripts/
 │   ├── link-to-target.ps1           ← (개발 모드) 정션 연결 — TF 일반 사용자는 불필요
 │   └── sync-to-target.ps1           ← (개발 모드) 정션 불가 환경용 복사
@@ -54,10 +66,10 @@ ehr-harness-yearend/
 
 ### 두 플러그인의 관계
 
-| 플러그인 | 역할 | 의존성 |
-|---|---|---|
-| `ehr-harness` | EHR 프로젝트에 **범용 하네스를 자동 생성** ("하네스 만들어줘") | 단독 사용 가능 |
-| `ehr-yearend-harness` | 연말정산 도메인 **전용 스킬·에이전트** 추가 | `ehr-harness` 와 독립 — 단독으로도 동작 (함께 쓰면 시너지) |
+| 플러그인 | 역할 | 포함 컴포넌트 | 의존성 |
+|---|---|---|---|
+| `ehr-harness` | EHR 프로젝트에 **범용 하네스를 자동 생성** ("하네스 만들어줘") | 4 agents · 7 skills · 5 commands · 2 hooks (생성된 하네스 안에 포함) | 단독 사용 가능 |
+| `ehr-yearend-harness` | 연말정산 도메인 **전용 지식·정책 패키지** 추가 | 3 skills(`yearend-domain-map`/`yearend-chain-tracer`/`yearend-plan-first`) · 1 agent(`yearend-investigator`) · 1 hook(`db-read-only`, 자동 등록) · 4 references | `ehr-harness` 와 독립 — 단독으로도 동작 (함께 쓰면 시너지) |
 
 연말정산 TF 멤버는 두 개 다 깔고, 일반 EHR 업무만 보는 사람은 `ehr-harness` 만 깔면 된다.
 
