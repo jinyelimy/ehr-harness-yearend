@@ -213,62 +213,35 @@ git clone https://github.com/qoxmfaktmxj/ehr-harness-plugin.git ~/Desktop/dev/eh
 /plugin install superpowers@claude-plugins-official
 ```
 
-### 방법 3: ehr-yearend-harness (연말정산 TF용 추가 설치)
+### 방법 3: ehr-yearend-harness (연말정산 TF용 — 단독 설치)
 
-원본 `ehr-harness` 외에 **연말정산 도메인 전용 패키지**(`ehr-yearend-harness`)를 함께 쓰려면 **본 레포(이 fork) 를 marketplace 로 등록**한 뒤 두 번째 플러그인을 설치한다. 본 레포의 `.claude-plugin/marketplace.json` 에 두 플러그인이 모두 등록되어 있어 한 곳에서 받을 수 있다.
-
-```bash
-# 1. 본 레포(이 fork) 를 마켓플레이스로 등록
-#    GitHub URL 또는 로컬 경로 모두 가능
-/plugin marketplace add <이-fork-의-GitHub-URL>
-#  또는 로컬 클론:
-#    git clone <이-fork-의-GitHub-URL> ~/dev/ehr-harness-yearend
-#    /plugin marketplace add ~/dev/ehr-harness-yearend
-
-# 2. 두 플러그인 설치
-/plugin install ehr-harness@ehr-harness-yearend          # 원본 범용 하네스 (본 fork 의 marketplace 안에 같이 들어있음)
-/plugin install ehr-yearend-harness@ehr-harness-yearend  # 연말정산 도메인 전용 (이 fork 에서 추가)
-
-# 3. superpowers 설치 (ehr-harness 사용 시 필수)
-/plugin install superpowers@claude-plugins-official
-```
-
-> 명령어 끝의 **`@ehr-harness-yearend`** 는 **marketplace 이름**(본 fork 의 `.claude-plugin/marketplace.json` 의 `name` 필드 — 원본 `ehr-harness` marketplace 와 구분하기 위해 fork 이름을 따름). 그 앞의 `ehr-harness` / `ehr-yearend-harness` 는 **플러그인 이름**이다. 즉 "`ehr-yearend-harness` 라는 플러그인이 `ehr-harness-yearend` 라는 marketplace(창고) 안에 들어 있다" 는 뜻.
-
-#### 3-1. 변경 검증용 — 워크트리에서 직접 시도
-
-본 fork 의 새 변경이 아직 `main` 브랜치로 머지되지 않고 git 워크트리에만 존재할 때(개발 중)는, 워크트리 경로를 그대로 마켓플레이스로 등록할 수 있다. main 으로 머지된 후에는 위 절차(GitHub URL 또는 main 체크아웃 경로)로 갈아탄다.
+연말정산(`yjungsan`) 도메인 전용 패키지. 본 fork 의 marketplace 를 등록한 뒤 한 줄로 설치.
 
 ```bash
-# 예시 — 현재 본인 환경의 워크트리 경로
-/plugin marketplace add C:\yelingg\ehr-harness-yearend\.claude\worktrees\competent-hertz-7d0fa9
+/plugin marketplace add https://github.com/jinyelimy/ehr-harness-yearend
 /plugin install ehr-yearend-harness@ehr-harness-yearend
 ```
 
-#### 3-2. 설치 검증
+> 끝의 **`@ehr-harness-yearend`** 는 *marketplace 이름* (`.claude-plugin/marketplace.json` 의 `name`). 그 앞이 *플러그인 이름*. 헷갈리지 말 것 — 이름이 비슷하지만 의미는 다르다.
 
-타깃 EHR 프로젝트(예: `EHR_HR50`) 디렉토리에서 Claude Code 를 켠 뒤 아래를 입력한다.
+**검증** — 타깃 EHR 프로젝트에서 Claude Code 에 입력:
 
 ```
 TCPN843 이 뭐야?
 ```
 
-→ `yearend-domain-map` 스킬이 자동 발동하여 `plugins/ehr-yearend-harness/references/yjungsan-tables.md` 기반 답변이 나오면 설치 정상.
+→ `yearend-domain-map` 스킬이 자동 발동해 references 기반 답변이 나오면 정상.
 
-다른 검증 질의도 동일하게 시험할 수 있다 — `"PKG_CPN_YEA_2026_SYNC 는 뭐 해?"`, `"마감 체인 정리해줘"`, `"BefComMgr 수정하면 어디까지 영향?"` 등.
+**TF 멤버 배포** — 위 두 줄만 안내. 업데이트가 들어오면 TF 멤버는 `/plugin marketplace update ehr-harness-yearend` 한 번으로 갱신.
 
-#### 3-3. TF 멤버에게 배포
+`ehr-yearend-harness` 는 단독으로 동작하도록 설계되어 원본 `ehr-harness` 없이도 정상 작동한다. 자세한 내부 구조·정책은 [`plugins/ehr-yearend-harness/README.md`](./plugins/ehr-yearend-harness/README.md) 참고.
 
-위 검증이 끝났으면 TF 멤버에게 다음만 안내한다.
-
-```bash
-/plugin marketplace add <이-fork-의-GitHub-URL-또는-공유-경로>
-/plugin install ehr-harness@ehr-harness-yearend
-/plugin install ehr-yearend-harness@ehr-harness-yearend
-/plugin install superpowers@claude-plugins-official
-```
-
-이후 본 fork 가 업데이트될 때마다 TF 멤버는 `/plugin marketplace update` 한 번으로 최신 상태를 받는다 (자세한 업데이트 절차는 아래 [3. 플러그인 업데이트 방법](#3-플러그인-업데이트-방법) 참고).
+> **(선택) `ehr-harness` 도 같이 쓰면**
+> 본 fork 의 marketplace 안에는 원본 `ehr-harness` 도 같이 들어있다. 같이 깔면 yearend 가 원본의 공통 스킬(`codebase-navigator`, `procedure-tracer`, `db-query` 등) 을 위임 호출해 시너지가 난다.
+> ```bash
+> /plugin install ehr-harness@ehr-harness-yearend
+> /plugin install superpowers@claude-plugins-official    # ehr-harness 사용 시 필수
+> ```
 
 ---
 
