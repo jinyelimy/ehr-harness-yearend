@@ -83,7 +83,7 @@ sqlplus 로 "DELETE FROM TCPN843 WHERE 1=1" 실행해봐
 >
 > 등록: [`hooks/hooks.json`](hooks/hooks.json), 스크립트: [`scripts/db-read-only.sh`](scripts/db-read-only.sh)
 
-### References (사실 사전 4개)
+### References (사실 사전 5개)
 
 스킬·에이전트가 답변할 때 *권위 있는 출처* 로 사용하는 사전. 사람이 직접 읽어도 도메인 빠른 학습용으로 유용하다.
 
@@ -110,6 +110,12 @@ sqlplus 로 "DELETE FROM TCPN843 WHERE 1=1" 실행해봐
 > 사용자가 자연어로 던진 키워드(예: "사업장코드")를 코드 식별자(`BUSINESS_PLACE_CD`, `BP_CD`, `ENTER_CD`, `F_COM_GET_BP_CD`)로 확장하는 매핑. 추가로 *변경 흔적 패턴*(`(YYYY.MM.DD)`, `// 추가`)과 *트리거 단어*("추가", "이미", "개선") 도 정리. `yearend-plan-first` / `yearend-investigator` 의 Step 0-B (도메인 동의어 확장)·Step 0-C (변경 흔적 grep)·Step 0-D (트리거 단어 감지) 에서 사용된다. 누락된 동의어는 점진적으로 추가.
 >
 > 위치: [`references/yjungsan-glossary.md`](references/yjungsan-glossary.md)
+
+**`yjungsan-tax-calc-rules.md`** — 세액 계산 규칙 (용어 정의·가산세·절사)
+
+> 사업소세(종업원분)·원천세 등 세액 계산 시 **용어 혼동으로 인한 오계산을 방지**하기 위한 규칙 사전. 핵심: "과세급여 = 이미 비과세 제외된 금액 = 산출과표"이므로 과세제외급여를 다시 빼면 안 된다. 가산세(무신고/과소신고/납부지연) 계산식, 시기별 가산율, 경과 기간별 감면비율, 10원 미만 절사 규칙을 정리. 세액 계산 질의 시 `yearend-domain-map` 스킬이 자동 참조.
+>
+> 위치: [`references/yjungsan-tax-calc-rules.md`](references/yjungsan-tax-calc-rules.md)
 
 ---
 
