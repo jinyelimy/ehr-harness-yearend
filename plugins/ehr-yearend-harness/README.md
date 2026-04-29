@@ -83,7 +83,7 @@ sqlplus 로 "DELETE FROM TCPN843 WHERE 1=1" 실행해봐
 >
 > 등록: [`hooks/hooks.json`](hooks/hooks.json), 스크립트: [`scripts/db-read-only.sh`](scripts/db-read-only.sh)
 
-### References (사실 사전 5개)
+### References (사실 사전 6개)
 
 스킬·에이전트가 답변할 때 *권위 있는 출처* 로 사용하는 사전. 사람이 직접 읽어도 도메인 빠른 학습용으로 유용하다.
 
@@ -116,6 +116,12 @@ sqlplus 로 "DELETE FROM TCPN843 WHERE 1=1" 실행해봐
 > 사업소세(종업원분)·원천세 등 세액 계산 시 **용어 혼동으로 인한 오계산을 방지**하기 위한 규칙 사전. 핵심: "과세급여 = 이미 비과세 제외된 금액 = 산출과표"이므로 과세제외급여를 다시 빼면 안 된다. 가산세(무신고/과소신고/납부지연) 계산식, 시기별 가산율, 경과 기간별 감면비율, 10원 미만 절사 규칙을 정리. 세액 계산 질의 시 `yearend-domain-map` 스킬이 자동 참조.
 >
 > 위치: [`references/yjungsan-tax-calc-rules.md`](references/yjungsan-tax-calc-rules.md)
+
+**`yjungsan-test-data.md`** — 테스트 데이터 위치 사전
+
+> 영향 분석·쿼리 작성 결과를 사용자가 직접 검증할 때 사용할 **테스트 데이터의 위치 인덱스**. 데이터 *내용* 이 아니라 *어디 있고 어떻게 쓰는지* 만 기록. 시나리오별 슬롯(일반/중도/재계산/외국인 분납/출산지원금/PDF 반영/마감 블로킹 등)과 표준 탐색 경로(`src/test/resources/**`, 사내 sample SQL 폴더 등)를 정리. 첫 사용 시 비어 있는 슬롯을 사용자/AI 가 점진적으로 채워간다. `yearend-chain-tracer` 의 *테스트 데이터 위치 안내* 단계에서 자동 참조. **신규 INSERT/UPDATE/DELETE 실행은 db-read-only 훅이 자동 차단** — 데이터 생성은 사용자가 수동.
+>
+> 위치: [`references/yjungsan-test-data.md`](references/yjungsan-test-data.md)
 
 ---
 

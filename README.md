@@ -30,7 +30,7 @@
 | 스킬 | `yearend-plan-first` ★ | 변경 작업 정책 (Step 0~4, 사용자 승인 후 수정) |
 | 에이전트 | `yearend-investigator` | 서술형 조사·플랜 초안 ("개정세법 영향도 봐줘") |
 | 훅 | `db-read-only` (자동 등록) | DB 변경 자동 차단, `SELECT`/`WITH`/`EXPLAIN`/`DESC` 만 허용 |
-| references | tables / packages / close-chain / glossary | yjungsan 사실 사전 4개 |
+| references | tables / packages / close-chain / glossary / tax-calc-rules / test-data | yjungsan 사실 사전 6개 |
 
 > 각 컴포넌트의 자세한 발동 시점·동작·정의 위치는 [`plugins/ehr-yearend-harness/README.md`](./plugins/ehr-yearend-harness/README.md) 의 *구성 요소* 섹션 참고.
 

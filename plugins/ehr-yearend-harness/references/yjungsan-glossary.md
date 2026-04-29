@@ -95,7 +95,7 @@
 | 마감 프로시저 | `P_CPN_YEA_CLOSE` |
 | PDF 반영 | `P_CPN_YEA_PDF_ERRCHK_{YY}`, `P_CPN_YEA_PDF_ERRUPD_{YY}` |
 
-> 패키지/프로시저는 **연도 의존**(`{YY}` = 25, 26 등). 검색 시 `2025` / `2026` 양쪽을 모두 시도.
+> 패키지/프로시저는 **연도 의존**. `{YY}` 표기는 placeholder 이며 실제로는 **귀속 연도의 4자리**(`2025`, `2026` 등)로 치환된다 — 자세한 치환 규칙은 [`yjungsan-packages.md`](yjungsan-packages.md) §"연도 연동 규칙" 참고. 검색 시 `2025` / `2026` 양쪽을 모두 시도.
 
 ---
 
