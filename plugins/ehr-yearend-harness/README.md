@@ -47,9 +47,13 @@ sqlplus 로 "DELETE FROM TCPN843 WHERE 1=1" 실행해봐
 >
 > 정의: [`skills/yearend-domain-map/SKILL.md`](skills/yearend-domain-map/SKILL.md)
 
-**`yearend-chain-tracer`** — 영향 범위 추적
+**`yearend-chain-tracer`** — 영향 범위 추적 + DB 컬럼 검증 + 테스트 데이터 안내
 
-> "`BefComMgr` 수정하면 어디 영향?", "`TCPN843` 컬럼 추가 시 체인", "마감에 영향 가?" 같은 **영향 범위** 질의에서 발동. 입력 하나(화면 / 테이블 / 프로시저 / 증상)를 받아 양방향으로 추적: 화면 → 매퍼 → 테이블 → 패키지 → 결과테이블 → 마감상태. 회귀 위험까지 짚어준다. 분석 전용, 수정 X.
+> "`BefComMgr` 수정하면 어디 영향?", "`TCPN843` 컬럼 추가 시 체인", "마감에 영향 가?", "조회 쿼리 짜줘", "이 데이터 확인", "테스트 데이터 어디 있어" 같은 질의에서 발동. 입력 하나(화면 / 테이블 / 프로시저 / 증상)를 받아 양방향으로 추적: 화면 → 매퍼 → 테이블 → 패키지 → 결과테이블 → 마감상태. 회귀 위험까지 짚어준다.
+>
+> **[v0.2.0 추가]** 쿼리 작성·컬럼 인용 전 **DB 컬럼 검증 게이트** 를 자동 수행: 매퍼 XML grep → `DESC` → references 사전 순으로 컬럼 존재 확인, 미검증 컬럼은 `⚠️ 확인 필요` 플래그. 또한 시나리오에 맞는 **테스트 데이터 위치**를 `yjungsan-test-data.md` 에서 조회해 안내한다.
+>
+> 분석 전용, 수정 X.
 >
 > 정의: [`skills/yearend-chain-tracer/SKILL.md`](skills/yearend-chain-tracer/SKILL.md)
 
