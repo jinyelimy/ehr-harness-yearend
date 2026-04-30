@@ -55,6 +55,8 @@ sqlplus 로 "DELETE FROM TCPN843 WHERE 1=1" 실행해봐
 >
 > **[v0.3.0]** 입력에 고객사명/`선배포`/`커스텀`/`사이트별 예외` 키워드가 있으면 `yjungsan-customer-variants.md` 를 보조 reference 로 확인해 *고객/회사별 분기 가능성* 을 출력 8번 조건부 섹션으로 표시한다. 매칭이 없으면 추측하지 않고 "매칭 없음 — 추측 안 함" 으로 명시.
 >
+> **[v0.3.1]** *Binary 파일 fail-fast 정책* 흡수 — `.mrd`/`.pdf`/`.zip`/`.jar`/`.class` 등은 1회 시도 후 즉시 "외부 도구 필요" 표시. `strings`/hex/iconv 다단계 추출 시도 금지. `yearend-investigator` 의 Step 0 시간 가드와 연동.
+>
 > 분석 전용, 수정 X.
 >
 > 정의: [`skills/yearend-chain-tracer/SKILL.md`](skills/yearend-chain-tracer/SKILL.md)
@@ -72,6 +74,8 @@ sqlplus 로 "DELETE FROM TCPN843 WHERE 1=1" 실행해봐
 > "장애 조사해줘", "개정세법 영향도 봐줘", "출산지원금 반영 플랜 잡아줘" 같은 **서술형·복합** 요청에서 호출. 위 스킬들을 조합해 (1) 요구사항/증상 요약, (2) 도메인 영향 범위, (3) 확인한 git 이력, (4) 실행 체인, (5) 영향도 표, (6) 리스크 체크리스트, (7) 패치 플랜 초안을 한 번에 산출한다. **실제 코드/DDL 수정은 하지 않음** — 산출물은 `superpowers:writing-plans` 에 넘기는 정제된 입력. 본 에이전트도 내부적으로 plan-first 정책(Step 0 부터)을 따름.
 >
 > **[v0.3.0]** 엑셀/JIRA/메신저에서 복사된 **자유텍스트 후속조치 입력**을 처리한다. 단일 1건과 N건 dump 둘 다 first-class 로 지원. 정규화는 *2단 구조* (Triage 5필드 → 상세 5필드) 로 분리해 N=20 dump 도 무리 없이 소화. N 별 처리 정책(N≤3 풀 분석 / 4-10 triage 우선 / >10 triage 만)은 *기본 정책*이며 사용자 명시 지시 우선. 본 에이전트는 *router/planner* 로 작동 — 정규화·라우팅·플랜화까지가 종착점이고, 실제 수정은 `yearend-plan-first` 정책에 위임.
+>
+> **[v0.3.1]** Step 0 강화 — (1) **의무 사전 조회**: 회사 키워드 감지 시 `customer-variants.md`, 검증 시 `test-data.md` 를 Step 0 즉시 자동 조회하고 출력 7번에 매칭 결과 라인 의무 명시. (2) **시간 가드**: 검색 4 batch / 파일 read 5개 / binary 1회 한도, 초과 시 사용자 동의 묻고 멈춤. (3) **회사 키워드 우선 좁히기**: `*_<KEYWORD>*` 파일명 매칭 우선, 광범위 grep 진입 금지. (4) **customer-variants 슬롯 자동 등록 제안**: 회사 키워드 + 분기 코드 발견 + 사전 미등록 3조건 충족 시 출력 마지막에 자동 제안 (사용자 동의 시에만 채움).
 >
 > 정의: [`agents/yearend-investigator.md`](agents/yearend-investigator.md)
 

@@ -84,7 +84,7 @@ ehr-harness-yearend/
 │   │   ├── profiles/                 ← EHR4 / EHR5 프로파일
 │   │   ├── scripts/
 │   │   └── skills/
-│   └── ehr-yearend-harness/          ← yearend 도메인 전용 v0.3.0
+│   └── ehr-yearend-harness/          ← yearend 도메인 전용 v0.3.1
 │       ├── README.md                 ← yearend 자체 안내 (단독 사용자 가이드)
 │       ├── references/               ← yjungsan 사실 사전 (tables, packages, close-chain, glossary, tax-calc-rules, test-data, customer-variants)
 │       ├── skills/                   ← yearend-domain-map / yearend-chain-tracer / yearend-plan-first
