@@ -6,6 +6,25 @@
 
 ---
 
+## [0.3.1] - 2026-04-30
+
+### Added
+- `agents/yearend-investigator.md` Step 0 에 **의무 사전 조회** 명시 — 회사 키워드 감지 시 `references/yjungsan-customer-variants.md` 자동 조회, 검증 시나리오 필요 시 `references/yjungsan-test-data.md` 자동 조회. 출력 7번 미확인 사항에 매칭 결과 라인 *반드시* 명시 (조회 누락과 매칭 없음 구별).
+- `agents/yearend-investigator.md` Step 0 에 **시간 가드** 도입 — 검색 최대 4 batch / 파일 read 최대 5개 / binary 파일 1회 시도. 한도 초과 시 사용자에게 "더 깊은 조사 진행할까요?" 묻고 멈춤.
+- `agents/yearend-investigator.md` Step 0 에 **회사 키워드 우선 좁히기** 정책 — 입력에 회사명/`ENTER_CD`/`*_<KEYWORD>*` 패턴 감지 시 해당 회사 디렉토리/파일 우선 매칭으로 시작. 일반 코드 전체 grep 진입 금지.
+- `agents/yearend-investigator.md` 에 **customer-variants 슬롯 자동 등록 제안** — 입력에 회사 키워드 + 코드베이스에서 `*<KEYWORD>*` 분기 파일 발견 + customer-variants.md 미등록 *3조건 동시 충족* 시 출력 마지막에 자동 슬롯 등록 제안. 사용자 동의 시에만 채움 (public repo 정책 준수).
+- `skills/yearend-chain-tracer/SKILL.md` 에 **Binary 파일 fail-fast 정책** — `.mrd`/`.pdf`/`.zip`/`.jar`/`.class` 등은 1회 시도 후 즉시 "외부 도구 필요" 표시, `strings`/hex/iconv 다단계 추출 시도 금지.
+
+### Changed
+- `plugin.json` 과 `marketplace.json` 의 `ehr-yearend-harness` 버전을 둘 다 `0.3.1` 로 동기화.
+
+### Notes
+- 신규 스킬·훅·command·DB/DDL 변경 **없음**. agent/skill 정의의 정책 강화만.
+- 본 hotfix 는 v0.3.0 실전 테스트 (카카오뱅크 후속조치 케이스, 1건 처리 18분) 에서 발견된 4가지 갭에 대응 — Step 0 의무 사전 누락 / 시간 가드 부재 / 광범위 grep / customer-variants 슬롯 등록 제안 누락.
+- 코드 수정은 여전히 `yearend-plan-first` 정책에 위임. DB 쓰기/DDL/PLSQL 실행은 `db-read-only` 훅이 차단.
+
+---
+
 ## [0.3.0] - 2026-04-30
 
 ### Added

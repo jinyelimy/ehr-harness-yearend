@@ -53,6 +53,37 @@ tools: Read, Glob, Grep, Bash
 - 그 위치의 현재 소스를 `Read`/`Grep` 으로 직접 열어 확인
 - DB 스키마/마감 체인은 `references/yjungsan-tables.md`, `references/yjungsan-close-chain.md` 와 비교
 
+#### Step 0 의무 사전 조회 (v0.3.1)
+
+다음 references 는 *모든* 후속조치 입력에서 Step 0 진입 *즉시* 조회한다 (자유텍스트/서술형 무관).
+
+- `references/yjungsan-customer-variants.md` — 입력에 회사 키워드(`고객사명`, `*_KABANG` 같은 ENTER_CD 추정값 등)가 있을 때
+- `references/yjungsan-test-data.md` — 검증 시나리오가 필요할 때
+
+조회 결과는 출력 7번 미확인 사항 섹션에 *반드시* 라인으로 명시한다. "매칭 없음" 도 명시해 *조회를 빠뜨린 것* 과 *매칭이 없는 것* 을 구별한다.
+
+#### Step 0 시간 가드 (v0.3.1)
+
+Step 0 는 *1차 판정* 우선. 다음 한도 안에서 끝낸다.
+
+- 검색: 최대 4 batch (예: 회사 키워드 grep → 변경 흔적 grep → git 이력 → references 조회)
+- 파일 read: 최대 5개
+- binary 파일 시도: 1회 후 즉시 "외부 도구 필요" 로 표시하고 중단 (자세한 정책은 `yearend-chain-tracer` 의 *Binary 파일 fail-fast 정책* 참조)
+
+위 한도 안에서 판정이 안 나면 사용자에게 다음 형태로 묻고 멈춘다:
+
+> Step 0 1차 결과: <요약>. 더 깊은 조사가 필요합니다 — 진행할까요?
+
+#### 회사 키워드 우선 좁히기 (v0.3.1)
+
+입력에 회사명·`ENTER_CD`·`*_<KEYWORD>*` 같은 패턴이 있으면 다음 *순서로* 좁힌다.
+
+1. `**/*<COMPANY_KEYWORD>*` 파일명 매칭으로 *해당 회사 디렉토리/파일 우선 식별*
+2. `references/yjungsan-customer-variants.md` 조회 (의무, 위 §의무 사전 조회)
+3. 그 후 일반 도메인 grep
+
+→ 일반 코드 전체 grep 부터 들어가지 말 것. 광범위 grep 은 시간 낭비 + false positive 증가.
+
 #### Case A — 이미 반영되어 있음
 
 추가 패치 작업 없이 조사 보고서를 다음과 같이 변형하여 종료한다.
@@ -254,6 +285,20 @@ tools: Read, Glob, Grep, Bash
 - 고객/회사별 분기: <매칭 결과 또는 "customer-variants.md 매칭 없음 — 추측 안 함">
 - ...
 ```
+
+### customer-variants 슬롯 자동 등록 제안 (v0.3.1)
+
+다음 패턴이 *동시에* 발견되면 출력 *마지막 한 줄*로 슬롯 등록을 자동 제안한다.
+
+- 입력에 회사 키워드 감지 (예: 카카오뱅크, KABANG)
+- 코드베이스에서 `*<KEYWORD>*` 분기 파일 발견 (예: `*_KABANG.jsp`, `*_KABANG.xml`)
+- `references/yjungsan-customer-variants.md` 에 매칭 슬롯 미등록
+
+자동 제안 형식 (출력 마지막):
+
+> 💡 **customer-variants.md 슬롯 등록 제안**: `<KEYWORD>` 분기 파일 `<발견 파일 목록>` 발견 — 사전 미등록 상태입니다. 등록할까요? (익명 default — `고객A (계열)` 형식 권장. 실명 등록은 *공개 가능* 명시 시에만.)
+
+사용자 *동의 시에만* 슬롯 채움. 동의 없는 자동 채움 금지 — public repo 정책 준수.
 
 ---
 
