@@ -47,11 +47,13 @@ sqlplus 로 "DELETE FROM TCPN843 WHERE 1=1" 실행해봐
 >
 > 정의: [`skills/yearend-domain-map/SKILL.md`](skills/yearend-domain-map/SKILL.md)
 
-**`yearend-chain-tracer`** — 영향 범위 추적 + DB 컬럼 검증 + 테스트 데이터 안내
+**`yearend-chain-tracer`** — 영향 범위 추적 + DB 컬럼 검증 + 테스트 데이터 안내 + 고객/회사별 분기 보조 확인
 
-> "`BefComMgr` 수정하면 어디 영향?", "`TCPN843` 컬럼 추가 시 체인", "마감에 영향 가?", "조회 쿼리 짜줘", "이 데이터 확인", "테스트 데이터 어디 있어" 같은 질의에서 발동. 입력 하나(화면 / 테이블 / 프로시저 / 증상)를 받아 양방향으로 추적: 화면 → 매퍼 → 테이블 → 패키지 → 결과테이블 → 마감상태. 회귀 위험까지 짚어준다.
+> "`BefComMgr` 수정하면 어디 영향?", "`TCPN843` 컬럼 추가 시 체인", "마감에 영향 가?", "조회 쿼리 짜줘", "이 데이터 확인", "테스트 데이터 어디 있어", "고객별 분기 있나" 같은 질의에서 발동. 입력 하나(화면 / 테이블 / 프로시저 / 증상 / 고객사명)를 받아 양방향으로 추적: 화면 → 매퍼 → 테이블 → 패키지 → 결과테이블 → 마감상태. 회귀 위험까지 짚어준다.
 >
-> **[v0.2.0 추가]** 쿼리 작성·컬럼 인용 전 **DB 컬럼 검증 게이트** 를 자동 수행: 매퍼 XML grep → `DESC` → references 사전 순으로 컬럼 존재 확인, 미검증 컬럼은 `⚠️ 확인 필요` 플래그. 또한 시나리오에 맞는 **테스트 데이터 위치**를 `yjungsan-test-data.md` 에서 조회해 안내한다.
+> **[v0.2.0]** 쿼리 작성·컬럼 인용 전 **DB 컬럼 검증 게이트** 를 자동 수행: 매퍼 XML grep → `DESC` → references 사전 순으로 컬럼 존재 확인, 미검증 컬럼은 `⚠️ 확인 필요` 플래그. 또한 시나리오에 맞는 **테스트 데이터 위치**를 `yjungsan-test-data.md` 에서 조회해 안내한다.
+>
+> **[v0.3.0]** 입력에 고객사명/`선배포`/`커스텀`/`사이트별 예외` 키워드가 있으면 `yjungsan-customer-variants.md` 를 보조 reference 로 확인해 *고객/회사별 분기 가능성* 을 출력 8번 조건부 섹션으로 표시한다. 매칭이 없으면 추측하지 않고 "매칭 없음 — 추측 안 함" 으로 명시.
 >
 > 분석 전용, 수정 X.
 >
@@ -65,9 +67,11 @@ sqlplus 로 "DELETE FROM TCPN843 WHERE 1=1" 실행해봐
 
 ### 에이전트
 
-**`yearend-investigator`** — 조사·플랜 초안
+**`yearend-investigator`** — 조사·플랜 초안 + 자유텍스트 후속조치 정규화
 
 > "장애 조사해줘", "개정세법 영향도 봐줘", "출산지원금 반영 플랜 잡아줘" 같은 **서술형·복합** 요청에서 호출. 위 스킬들을 조합해 (1) 요구사항/증상 요약, (2) 도메인 영향 범위, (3) 확인한 git 이력, (4) 실행 체인, (5) 영향도 표, (6) 리스크 체크리스트, (7) 패치 플랜 초안을 한 번에 산출한다. **실제 코드/DDL 수정은 하지 않음** — 산출물은 `superpowers:writing-plans` 에 넘기는 정제된 입력. 본 에이전트도 내부적으로 plan-first 정책(Step 0 부터)을 따름.
+>
+> **[v0.3.0]** 엑셀/JIRA/메신저에서 복사된 **자유텍스트 후속조치 입력**을 처리한다. 단일 1건과 N건 dump 둘 다 first-class 로 지원. 정규화는 *2단 구조* (Triage 5필드 → 상세 5필드) 로 분리해 N=20 dump 도 무리 없이 소화. N 별 처리 정책(N≤3 풀 분석 / 4-10 triage 우선 / >10 triage 만)은 *기본 정책*이며 사용자 명시 지시 우선. 본 에이전트는 *router/planner* 로 작동 — 정규화·라우팅·플랜화까지가 종착점이고, 실제 수정은 `yearend-plan-first` 정책에 위임.
 >
 > 정의: [`agents/yearend-investigator.md`](agents/yearend-investigator.md)
 
@@ -121,11 +125,43 @@ sqlplus 로 "DELETE FROM TCPN843 WHERE 1=1" 실행해봐
 >
 > 위치: [`references/yjungsan-tax-calc-rules.md`](references/yjungsan-tax-calc-rules.md)
 
-**`yjungsan-test-data.md`** — 테스트 데이터 위치 사전
+**`yjungsan-test-data.md`** — 테스트 데이터 위치 사전 + 검증 체크리스트 템플릿
 
 > 영향 분석·쿼리 작성 결과를 사용자가 직접 검증할 때 사용할 **테스트 데이터의 위치 인덱스**. 데이터 *내용* 이 아니라 *어디 있고 어떻게 쓰는지* 만 기록. 시나리오별 슬롯(일반/중도/재계산/외국인 분납/출산지원금/PDF 반영/마감 블로킹 등)과 표준 탐색 경로(`src/test/resources/**`, 사내 sample SQL 폴더 등)를 정리. 첫 사용 시 비어 있는 슬롯을 사용자/AI 가 점진적으로 채워간다. `yearend-chain-tracer` 의 *테스트 데이터 위치 안내* 단계에서 자동 참조. **신규 INSERT/UPDATE/DELETE 실행은 db-read-only 훅이 자동 차단** — 데이터 생성은 사용자가 수동.
 >
+> **[v0.3.0]** 시나리오별 *검증 체크리스트 템플릿* (퇴직소득 변경 / 출산지원금 반영 / 종전근무지 합산 / 외국인 분납) 추가. 후속조치 처리 후 누락 방지용 표준.
+>
 > 위치: [`references/yjungsan-test-data.md`](references/yjungsan-test-data.md)
+
+**`yjungsan-customer-variants.md`** — 고객/회사별 분기 사전 ★ v0.3.0 신규
+
+> 연말정산 도메인에서 고객사·회사별·그룹별 분기 로직(선배포 · 커스텀 · 예외)이 있을 *가능성* 을 탐색하기 위한 reference. 분기 사실 자체가 아니라 *어디를 먼저 봐야 하는지* 만 기록. **public repo 정책**: 기본 슬롯은 익명 고객명(`고객A`, `고객B`, …) 으로 시작하고, 실명은 사용자가 *공개 가능* 하다고 명시한 경우에만 갱신. 장애 상세, 운영 데이터, 계약 조건, 담당자명, 내부 배포 일정은 기록 X. 매칭이 없으면 추측 안 함 — 단정 표현("고객X 는 별도 로직 적용됨") 금지. `yearend-chain-tracer` 의 *고객/회사별 분기 보조 확인* 단계와 `yearend-investigator` 의 *자유텍스트 후속조치 입력 처리* 단계에서 자동 참조.
+>
+> 위치: [`references/yjungsan-customer-variants.md`](references/yjungsan-customer-variants.md)
+
+---
+
+## 후속조치 배정 건 처리 — 권장 프롬프트
+
+후속조치 시트/JIRA/메신저에서 본인 배정 건을 복사한 뒤 Claude 에게 다음 형태로 요청한다. 가장 짧게는 한 줄이면 충분하다.
+
+```text
+다음 후속조치 건 정리하고 기존 반영 여부부터 확인해줘.
+
+<원문 붙여넣기>
+```
+
+알고 있는 정보가 있으면 아래 정도만 추가한다 (없어도 됨 — 부족하면 `yearend-investigator` 가 역질문).
+
+```text
+- 고객/회사:
+- 귀속연도:
+- 정산구분:
+```
+
+`yearend-investigator` 가 자유텍스트를 *Triage 5필드 → 상세 5필드* 로 정규화하고, Step 0(현 상태 확인) 부터 진행한다. **수정은 `yearend-plan-first` 정책에 따라 사용자 승인 후**. DB 는 SELECT/DESC 만 허용 (`db-read-only` 훅).
+
+N건 dump (엑셀 행 복사 / JIRA dump) 도 그대로 붙여넣으면 된다. N 에 따라 처리 깊이가 자동 조정 (≤3 풀 분석 / 4-10 triage 우선 / >10 triage 만).
 
 ---
 

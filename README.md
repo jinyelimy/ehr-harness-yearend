@@ -14,7 +14,7 @@
 
 | 플러그인 | 역할 | 상세 매뉴얼 |
 |---|---|---|
-| **`ehr-yearend-harness`** ★ | 연말정산 도메인 전용 (스킬 3 + 에이전트 1 + 훅 1 + references 4) — *본 fork 의 메인 산출물* | [`plugins/ehr-yearend-harness/README.md`](./plugins/ehr-yearend-harness/README.md) |
+| **`ehr-yearend-harness`** ★ | 연말정산 도메인 전용 (스킬 3 + 에이전트 1 + 훅 1 + references 7) — *본 fork 의 메인 산출물* | [`plugins/ehr-yearend-harness/README.md`](./plugins/ehr-yearend-harness/README.md) |
 | `ehr-harness` | EHR4/5 범용 하네스 자동 생성기 — *"하네스 만들어줘"* 한 마디로 EHR 프로젝트 분석 + 맞춤 하네스 생성 (원본 그대로) | [`plugins/ehr-harness/README.md`](./plugins/ehr-harness/README.md) |
 
 > 두 플러그인은 코드를 합친 게 아니라 같은 marketplace 안에 *공존* 하며, 각자 독립적으로 동작합니다. 사용자는 둘 중 원하는 것만 골라 설치할 수 있습니다.
@@ -30,7 +30,7 @@
 | 스킬 | `yearend-plan-first` ★ | 변경 작업 정책 (Step 0~4, 사용자 승인 후 수정) |
 | 에이전트 | `yearend-investigator` | 서술형 조사·플랜 초안 ("개정세법 영향도 봐줘") |
 | 훅 | `db-read-only` (자동 등록) | DB 변경 자동 차단, `SELECT`/`WITH`/`EXPLAIN`/`DESC` 만 허용 |
-| references | tables / packages / close-chain / glossary / tax-calc-rules / test-data | yjungsan 사실 사전 6개 |
+| references | tables / packages / close-chain / glossary / tax-calc-rules / test-data / customer-variants | yjungsan 사실 사전 7개 |
 
 > 각 컴포넌트의 자세한 발동 시점·동작·정의 위치는 [`plugins/ehr-yearend-harness/README.md`](./plugins/ehr-yearend-harness/README.md) 의 *구성 요소* 섹션 참고.
 
@@ -84,9 +84,9 @@ ehr-harness-yearend/
 │   │   ├── profiles/                 ← EHR4 / EHR5 프로파일
 │   │   ├── scripts/
 │   │   └── skills/
-│   └── ehr-yearend-harness/          ← yearend 도메인 전용 v0.2.0
+│   └── ehr-yearend-harness/          ← yearend 도메인 전용 v0.3.0
 │       ├── README.md                 ← yearend 자체 안내 (단독 사용자 가이드)
-│       ├── references/               ← yjungsan 사실 사전 (tables, packages, close-chain, glossary)
+│       ├── references/               ← yjungsan 사실 사전 (tables, packages, close-chain, glossary, tax-calc-rules, test-data, customer-variants)
 │       ├── skills/                   ← yearend-domain-map / yearend-chain-tracer / yearend-plan-first
 │       ├── agents/                   ← yearend-investigator
 │       ├── hooks/                    ← PreToolUse(Bash) 훅

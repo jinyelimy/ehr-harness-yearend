@@ -6,6 +6,30 @@
 
 ---
 
+## [0.3.0] - 2026-04-30
+
+### Added
+- `references/yjungsan-customer-variants.md` 신설 — 고객/회사별 분기 사전. 분기 사실 자체가 아니라 *어디를 먼저 봐야 하는지* 만 기록하는 탐색 사전. **public repo 정책**: 기본 슬롯은 익명 고객명(`고객A` ~ `고객E`) + 빈 슬롯, 실명은 사용자 명시 승인 시에만 갱신. 장애 상세·운영 데이터·계약 조건·담당자명·내부 배포 일정 기록 금지. 매칭 없으면 추측 안 함, 단정 표현(`고객X 는 별도 로직 적용됨`) 금지.
+- `references/yjungsan-test-data.md` 에 **시나리오별 검증 체크리스트 템플릿** 추가 — 퇴직소득 변경 / 출산지원금 반영 / 종전근무지 합산 / 외국인 분납 4종. 후속조치 처리 후 누락 방지용 표준.
+- `agents/yearend-investigator.md` 에 **자유텍스트 후속조치 입력 처리** 케이스 흡수 — 단일 1건과 N건 dump 둘 다 first-class. 정규화는 *2단 구조*(Triage 5필드 → 상세 5필드). N 별 처리 정책(N=1/≤3/4-10/>10)은 *기본 정책*이며 사용자 명시 지시 우선. Triage 표 형식 예시 + 보조 사전 참조 정책 명시. 출력 템플릿 7번 미확인 사항에 `고객/회사별 분기` 라인 추가.
+- `agents/yearend-investigator.md` 에 *router/planner* 포지셔닝 명문화 — 후속조치 항목의 실제 수정자가 아니라 정규화·라우팅·플랜화 담당. 실제 코드 수정은 `yearend-plan-first` 정책에 위임.
+- `skills/yearend-chain-tracer/SKILL.md` 에 **고객/회사별 분기 보조 확인** sub-step 흡수 — `고객별 분기` / `고객사별` / `회사별` / `선배포` / `커스텀` / `사이트별 예외` 키워드 또는 `customer-variants.md` 등록 식별자 감지 시 보조 reference 확인. 출력 8번 *조건부* 섹션 추가 (감지 + 매칭 있음일 때 정식 4줄, 감지 + 매칭 없음일 때 한 줄, 미감지 시 섹션 자체 생략).
+- `skills/yearend-chain-tracer/SKILL.md` description 에 트리거 어휘 보강 (`고객별 분기`, `고객사별`, `회사별`, `선배포`, `커스텀`, `사이트별 예외`).
+- 플러그인 README 에 **후속조치 배정 건 처리 — 권장 프롬프트** 섹션 추가 (담당자가 본인 배정 건을 짧게 붙여넣어 처리하는 표준 형식).
+
+### Changed
+- 루트 README / 플러그인 README / NOTICE 의 references 표기를 6개 → 7개로 동기화 (`customer-variants.md` 신설 반영). 루트 README 의 references 4↔6 혼재 표기도 정리.
+- 루트 README 폴더 구조의 `v0.2.0` 표기를 `v0.3.0` 으로 갱신.
+- 루트 `.claude-plugin/marketplace.json` 과 플러그인 `plugin.json` 의 `ehr-yearend-harness` 버전을 둘 다 `0.3.0` 으로 동기화.
+
+### Notes
+- 신규 스킬, 신규 훅, slash command, DB/DDL 변경 **없음**. 기존 책임을 새 컴포넌트로 만들지 않고 `yearend-investigator` 와 `yearend-chain-tracer` 에 흡수해 경량성을 유지 (v0.2.0 의 설계 철학 계승).
+- `customer-variants.md` 는 출시 직후 빈 슬롯이 기본 — chain-tracer 8번 섹션은 `매칭 없음 — 추측 안 함` 한 줄 출력이 기본 동작. 슬롯은 실전 케이스로 점진 채움 (PR 환영).
+- 실제 코드 수정은 여전히 `yearend-plan-first` 정책에 따라 사용자 승인 후 진행. DB 쓰기/DDL/PLSQL 실행은 `db-read-only` 훅이 차단.
+- 익명화는 이름 직접 노출만 막고 업계 추측까지 차단하지는 않는다. 분기 *내용* 도 일반 코드 식별자 수준으로 유지해 차폐 강화.
+
+---
+
 ## [0.2.0] - 2026-04-29
 
 ### Added

@@ -9,5 +9,5 @@
 
 ## 보강 사항
 
-- `plugins/ehr-yearend-harness/` 하위에 연말정산 도메인 패키지 추가 — 스킬 3개(`yearend-domain-map` / `yearend-chain-tracer` / `yearend-plan-first`), 에이전트 1개(`yearend-investigator`), 훅 1개(`db-read-only`), references 6개(`tables` / `packages` / `close-chain` / `glossary` / `tax-calc-rules` / `test-data`)
+- `plugins/ehr-yearend-harness/` 하위에 연말정산 도메인 패키지 추가 — 스킬 3개(`yearend-domain-map` / `yearend-chain-tracer` / `yearend-plan-first`), 에이전트 1개(`yearend-investigator`), 훅 1개(`db-read-only`), references 7개(`tables` / `packages` / `close-chain` / `glossary` / `tax-calc-rules` / `test-data` / `customer-variants`)
 - 소득공제·세액공제 규칙, 원천징수영수증 생성, 국세청 간소화자료 스키마 등은 점진적 보강 (PR 환영)
