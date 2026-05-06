@@ -63,14 +63,20 @@ Codex 는 [`.codex-plugin/plugin.json`](./plugins/ehr-yearend-harness/.codex-plu
 
 ### Codex
 
-Codex 에서는 repo-local marketplace 를 추가한 뒤 `/plugins` 에서 설치한다.
+현재 확인한 Codex CLI `0.120.0` 기준으로는 `codex plugin marketplace add ...` 명령이 없다. Codex 에서는 이 저장소를 로컬 marketplace 로 읽도록 전역 설정에 등록한다.
 
-```
-codex plugin marketplace add https://github.com/jinyelimy/ehr-harness-yearend
+```toml
+# ~/.codex/config.toml
+
+[marketplaces.ehr-harness-yearend]
+source_type = "local"
+source = 'C:\yelingg\ehr-harness-yearend'
+
+[plugins."ehr-yearend-harness@ehr-harness-yearend"]
+enabled = true
 ```
 
-이 저장소에는 Codex용 marketplace 파일([`.agents/plugins/marketplace.json`](./.agents/plugins/marketplace.json))과
-plugin manifest([`plugins/ehr-yearend-harness/.codex-plugin/plugin.json`](./plugins/ehr-yearend-harness/.codex-plugin/plugin.json))가 포함되어 있다.
+다른 PC나 다른 clone 경로에서는 `source` 만 해당 저장소 경로로 바꾼다. 설정 후 Codex 를 새로 시작하면 이 저장소의 Codex용 marketplace 파일([`.agents/plugins/marketplace.json`](./.agents/plugins/marketplace.json))과 plugin manifest([`plugins/ehr-yearend-harness/.codex-plugin/plugin.json`](./plugins/ehr-yearend-harness/.codex-plugin/plugin.json))를 읽는다.
 
 DB 차단 hook 까지 쓰려면 Codex 설정에 hooks feature flag 를 켠다. 이 저장소에는 프로젝트 로컬 설정([`.codex/config.toml`](./.codex/config.toml))을 포함해 두었다. 다른 EHR 프로젝트에서 쓰려면 해당 프로젝트에도 같은 파일을 만들거나, 전역 설정(`~/.codex/config.toml`)에 추가한다.
 
@@ -133,6 +139,8 @@ ehr-harness-yearend/
 
 ## 업데이트
 
+Claude Code:
+
 ```
 /plugin marketplace update ehr-harness-yearend
 /plugin update ehr-yearend-harness@ehr-harness-yearend
@@ -145,6 +153,14 @@ ehr-harness-yearend/
 /plugin marketplace update ehr-harness-yearend
 /plugin install ehr-yearend-harness@ehr-harness-yearend
 ```
+
+Codex:
+
+```powershell
+git -C C:\yelingg\ehr-harness-yearend pull --ff-only
+```
+
+그 뒤 Codex 를 새로 시작한다. `~/.codex/config.toml` 의 marketplace `source` 가 이 clone 경로를 가리키므로 별도 `plugin update` 명령은 쓰지 않는다.
 
 ---
 
