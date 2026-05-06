@@ -6,6 +6,16 @@
 
 ---
 
+## [0.4.1] - 2026-05-06
+
+### Added
+- Claude Code 와 Codex 를 한 번에 구조화하는 통합 설치자 추가: `scripts/install-all.ps1`.
+
+### Changed
+- README 의 기본 설치 경로를 수동 Claude/Codex 분리 설치에서 통합 설치자 우선으로 변경.
+
+---
+
 ## [0.4.0] - 2026-05-06
 
 ### Added

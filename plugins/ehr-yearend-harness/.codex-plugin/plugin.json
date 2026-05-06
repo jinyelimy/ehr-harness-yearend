@@ -1,6 +1,6 @@
 {
   "name": "ehr-yearend-harness",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "연말정산(yjungsan) 도메인 전용 Codex 스킬·가드 패키지. 도메인 사전 조회, 실행 체인 추적, plan-first 변경 정책, 후속조치 조사 워크플로우를 제공한다.",
   "author": {
     "name": "yelim-jin"

@@ -8,7 +8,24 @@
 
 ## 설치
 
-### Claude Code
+### 한 번에 Claude + Codex 적용 (권장)
+
+레포 루트에서 설치자를 한 번 실행한다.
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-all.ps1
+```
+
+이 설치자는 같은 `ehr-yearend-harness` 구조를 양쪽에 동시에 적용한다.
+
+| 대상 | 설치자가 하는 일 |
+|---|---|
+| Claude Code | `ehr-yearend-harness@ehr-harness-yearend` 를 user plugin 으로 enable 하고, 현재 plugin version cache 를 구성 |
+| Codex | `~/.codex/config.toml` 에 local marketplace, plugin enable, `codex_hooks = true` 를 기록 |
+
+실행 후 Claude Code 와 Codex 를 새로 시작하면 된다. 다시 실행해도 중복 블록을 만들지 않고 같은 상태로 갱신된다.
+
+### 수동 설치: Claude Code
 
 타깃 EHR 프로젝트(예: `EHR_HR50`)에서 Claude Code 를 켠 뒤:
 
@@ -19,7 +36,7 @@
 
 > 끝의 `@ehr-harness-yearend` 는 *marketplace 이름*, 그 앞이 *플러그인 이름* 이다.
 
-### Codex
+### 수동 설치: Codex
 
 현재 확인한 Codex CLI `0.120.0` 기준으로는 `codex plugin marketplace add ...` 명령이 없다. 이 저장소를 clone 한 뒤 `~/.codex/config.toml` 에 로컬 marketplace 와 plugin enable 항목을 추가한다.
 

@@ -50,7 +50,26 @@ Codex 는 [`.codex-plugin/plugin.json`](./plugins/ehr-yearend-harness/.codex-plu
 
 ## 설치 — `ehr-yearend-harness` 단독
 
-### Claude Code
+### 한 번에 Claude + Codex 적용 (권장)
+
+이 레포를 clone 한 뒤 설치자를 한 번 실행한다.
+
+```powershell
+git clone https://github.com/jinyelimy/ehr-harness-yearend
+cd ehr-harness-yearend
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-all.ps1
+```
+
+이 설치자는 같은 구조화 묶음을 양쪽 런타임에 동시에 적용한다.
+
+| 대상 | 설치자가 하는 일 |
+|---|---|
+| Claude Code | `ehr-yearend-harness@ehr-harness-yearend` 를 user plugin 으로 enable 하고, 현재 plugin version cache 를 구성 |
+| Codex | `~/.codex/config.toml` 에 local marketplace, plugin enable, `codex_hooks = true` 를 기록 |
+
+실행 후 Claude Code 와 Codex 를 새로 시작하면 된다. 다시 실행해도 중복 블록을 만들지 않고 같은 상태로 갱신된다.
+
+### 수동 설치: Claude Code
 
 타깃 EHR 프로젝트(예: `EHR_HR50`)에서 Claude Code 를 켠 뒤:
 
@@ -61,7 +80,7 @@ Codex 는 [`.codex-plugin/plugin.json`](./plugins/ehr-yearend-harness/.codex-plu
 
 > 끝의 `@ehr-harness-yearend` 는 *marketplace 이름*, 그 앞이 *플러그인 이름*. 헷갈리기 쉬우니 주의.
 
-### Codex
+### 수동 설치: Codex
 
 현재 확인한 Codex CLI `0.120.0` 기준으로는 `codex plugin marketplace add ...` 명령이 없다. Codex 에서는 이 저장소를 로컬 marketplace 로 읽도록 전역 설정에 등록한다.
 
@@ -122,7 +141,7 @@ ehr-harness-yearend/
 │   │   ├── profiles/                 ← EHR4 / EHR5 프로파일
 │   │   ├── scripts/
 │   │   └── skills/
-│   └── ehr-yearend-harness/          ← yearend 도메인 전용 v0.4.0
+│   └── ehr-yearend-harness/          ← yearend 도메인 전용 v0.4.1
 │       ├── README.md                 ← yearend 자체 안내 (단독 사용자 가이드)
 │       ├── .codex-plugin/            ← Codex plugin manifest
 │       ├── references/               ← yjungsan 사실 사전 (tables, packages, close-chain, glossary, tax-calc-rules, test-data, customer-variants)
