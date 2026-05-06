@@ -1,7 +1,7 @@
 {
   "name": "ehr-harness-yearend",
   "owner": {
-    "name": "minseok kim"
+    "name": "yelim-jin"
   },
   "metadata": {
     "description": "EHR4/5 범용 하네스 자동 생성기 (원본) + 연말정산 도메인 전용 패키지를 함께 제공하는 fork marketplace"
@@ -18,7 +18,7 @@
       "name": "ehr-yearend-harness",
       "source": "./plugins/ehr-yearend-harness",
       "description": "연말정산(yjungsan) 도메인 전용 Claude Code 스킬·에이전트 패키지. EHR 프로젝트 위에 추가 설치한다.",
-      "version": "0.3.1",
+      "version": "0.4.0",
       "keywords": ["ehr", "yearend", "yjungsan", "tax-settlement"]
     }
   ]

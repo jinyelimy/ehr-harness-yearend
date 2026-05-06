@@ -1,0 +1,35 @@
+{
+  "name": "ehr-yearend-harness",
+  "version": "0.4.0",
+  "description": "연말정산(yjungsan) 도메인 전용 Codex 스킬·가드 패키지. 도메인 사전 조회, 실행 체인 추적, plan-first 변경 정책, 후속조치 조사 워크플로우를 제공한다.",
+  "author": {
+    "name": "yelim-jin"
+  },
+  "repository": "https://github.com/jinyelimy/ehr-harness-yearend",
+  "keywords": [
+    "ehr",
+    "yearend",
+    "yjungsan",
+    "tax-settlement",
+    "codex"
+  ],
+  "skills": "./skills/",
+  "hooks": "./hooks/codex-hooks.json",
+  "interface": {
+    "displayName": "EHR Yearend Harness",
+    "shortDescription": "연말정산 도메인 조사와 변경 안전장치",
+    "longDescription": "Codex에서 연말정산(yjungsan) 도메인 사전, 실행 체인 추적, 후속조치 조사, plan-first 변경 정책, DB read-only 가드를 함께 사용할 수 있게 하는 하네스입니다.",
+    "developerName": "yelim-jin",
+    "category": "Engineering",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "TCPN843 이 뭐야?",
+      "다음 후속조치 건 정리하고 기존 반영 여부부터 확인해줘.",
+      "BefComMgr 수정하면 연말정산 마감 체인에 영향 가?"
+    ],
+    "brandColor": "#155E75"
+  }
+}

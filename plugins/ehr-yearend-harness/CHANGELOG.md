@@ -6,6 +6,26 @@
 
 ---
 
+## [0.4.0] - 2026-05-06
+
+### Added
+- Codex plugin manifest 추가: `.codex-plugin/plugin.json`.
+- Codex repo-local marketplace 추가: `.agents/plugins/marketplace.json`.
+- `yearend-investigator` Codex skill wrapper 추가. Claude의 `agents/yearend-investigator.md` 를 별도 subagent가 아니라 메인 Codex가 따르는 조사 워크플로우로 사용한다.
+- Codex용 `db-read-only` hook 설정 추가: `hooks/codex-hooks.json`.
+- Windows/PowerShell 검증용 DB read-only guard 추가: `scripts/db-read-only.ps1`.
+
+### Changed
+- `ehr-yearend-harness` 버전을 `0.4.0` 으로 동기화.
+- README 를 Claude Code / Codex 이중 사용 구조에 맞게 갱신.
+- Claude agent 와 Codex skill wrapper 를 나눈 이유를 README 와 `agents/yearend-investigator.md` 에 명시.
+
+### Notes
+- Claude용 `agents/yearend-investigator.md` 는 유지한다. Codex에서는 평소 skill wrapper를 기본 surface로 쓰고, 여러 건 병렬 조사처럼 명시적인 병렬 요청이 있을 때만 native subagent 사용을 고려한다.
+- Codex hook은 `PreToolUse` Bash matcher에서 SQL CLI 명령을 검사하며, `SELECT`/`WITH`/`EXPLAIN`/`DESC` 성격만 허용한다.
+
+---
+
 ## [0.3.1] - 2026-04-30
 
 ### Added

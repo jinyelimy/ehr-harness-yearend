@@ -6,6 +6,10 @@ tools: Read, Glob, Grep, Bash
 
 # Yearend Investigator
 
+> Codex 에서는 이 파일을 직접 agent 로 로딩하지 않는다. Codex 진입점은
+> `skills/yearend-investigator/SKILL.md` 이며, 그 wrapper skill 이 이 파일을
+> 상세 조사 지침으로 읽는다. Claude Code 에서는 이 파일 자체가 agent 진입점이다.
+
 연말정산 도메인의 실무 조사와 영향도 분석, 그리고 후속 플래너에게 넘기기 위한 **패치 플랜 초안** 작성을 담당하는 에이전트다.
 
 ---

@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"$ErrorActionPreference='Stop'; $payload=[Console]::In.ReadToEnd(); try { $event=$payload | ConvertFrom-Json } catch { [Console]::Error.WriteLine('db-read-only hook input parse failure; blocking for safety.'); exit 2 }; $command=[string]$event.tool_input.command; if ([string]::IsNullOrWhiteSpace($command)) { exit 0 }; if ($command -notmatch '(?i)(\\bsqlplus\\b|\\bsqlcl\\b|\\bsqlcmd\\b|\\bimpdp\\b|\\bexpdp\\b|\\brman\\b|\\btibero\\b|\\btbsql\\b)') { exit 0 }; if ($command -match '@\\S+\\.sql\\b') { [Console]::Error.WriteLine('SQL script execution blocked: @script.sql is not inspectable by the hook.'); exit 2 }; $match=[regex]::Match($command,'(?i)\\b(DROP|TRUNCATE|DELETE|UPDATE|INSERT|MERGE|ALTER|CREATE|GRANT|REVOKE|UPSERT|EXEC|EXECUTE|CALL|DECLARE|BEGIN|DBMS_[A-Z_]+|UTL_[A-Z_]+)\\b'); if ($match.Success) { [Console]::Error.WriteLine('DB write/execute SQL blocked: ' + $match.Value + '. Only SELECT/WITH/EXPLAIN/DESC are allowed.'); exit 2 }; exit 0\"",
+            "statusMessage": "Checking yearend DB read-only policy",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

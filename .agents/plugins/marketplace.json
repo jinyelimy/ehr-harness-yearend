@@ -1,0 +1,20 @@
+{
+  "name": "ehr-harness-yearend",
+  "interface": {
+    "displayName": "EHR Harness Yearend"
+  },
+  "plugins": [
+    {
+      "name": "ehr-yearend-harness",
+      "source": {
+        "source": "local",
+        "path": "./plugins/ehr-yearend-harness"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Engineering"
+    }
+  ]
+}

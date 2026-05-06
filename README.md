@@ -1,6 +1,6 @@
 # ehr-harness-yearend
 
-연말정산(`yjungsan`) 도메인 보강 Claude Code 플러그인 모음.
+연말정산(`yjungsan`) 도메인 보강 Claude Code / Codex 플러그인 모음.
 
 > 본 레포는 [qoxmfaktmxj/ehr-harness-plugin](https://github.com/qoxmfaktmxj/ehr-harness-plugin) 의 fork 입니다.
 > 원본의 `ehr-harness` 플러그인은 그대로 보존하고, 그 옆에 연말정산 도메인 전용 패키지 `ehr-yearend-harness` 를 같이 묶었습니다.
@@ -14,7 +14,7 @@
 
 | 플러그인 | 역할 | 상세 매뉴얼 |
 |---|---|---|
-| **`ehr-yearend-harness`** ★ | 연말정산 도메인 전용 (스킬 3 + 에이전트 1 + 훅 1 + references 7) — *본 fork 의 메인 산출물* | [`plugins/ehr-yearend-harness/README.md`](./plugins/ehr-yearend-harness/README.md) |
+| **`ehr-yearend-harness`** ★ | 연말정산 도메인 전용 (Claude: 스킬 3 + 에이전트 1 / Codex: 스킬 4 + 훅 1 + references 7) — *본 fork 의 메인 산출물* | [`plugins/ehr-yearend-harness/README.md`](./plugins/ehr-yearend-harness/README.md) |
 | `ehr-harness` | EHR4/5 범용 하네스 자동 생성기 — *"하네스 만들어줘"* 한 마디로 EHR 프로젝트 분석 + 맞춤 하네스 생성 (원본 그대로) | [`plugins/ehr-harness/README.md`](./plugins/ehr-harness/README.md) |
 
 > 두 플러그인은 코드를 합친 게 아니라 같은 marketplace 안에 *공존* 하며, 각자 독립적으로 동작합니다. 사용자는 둘 중 원하는 것만 골라 설치할 수 있습니다.
@@ -28,7 +28,7 @@
 | 스킬 | `yearend-domain-map` | 도메인 지식 조회 ("TCPN843 이 뭐야?") |
 | 스킬 | `yearend-chain-tracer` | 영향 범위 추적 ("이 컬럼 고치면 어디 영향?") |
 | 스킬 | `yearend-plan-first` ★ | 변경 작업 정책 (Step 0~4, 사용자 승인 후 수정) |
-| 에이전트 | `yearend-investigator` | 서술형 조사·플랜 초안 ("개정세법 영향도 봐줘") |
+| 스킬(Codex) / 에이전트(Claude) | `yearend-investigator` | 서술형 조사·플랜 초안 ("개정세법 영향도 봐줘") |
 | 훅 | `db-read-only` (자동 등록) | DB 변경 자동 차단, `SELECT`/`WITH`/`EXPLAIN`/`DESC` 만 허용 |
 | references | tables / packages / close-chain / glossary / tax-calc-rules / test-data / customer-variants | yjungsan 사실 사전 7개 |
 
@@ -36,7 +36,21 @@
 
 ---
 
-## 설치 — `ehr-yearend-harness` 단독 (한 줄)
+## Claude와 Codex 구조 차이
+
+Claude Code 는 플러그인 폴더 convention 으로 `skills/*/SKILL.md`, `agents/*.md`, `hooks/hooks.json` 을 인식한다. 그래서 [`agents/yearend-investigator.md`](./plugins/ehr-yearend-harness/agents/yearend-investigator.md) 는 Claude 에서 직접 agent 진입점이다.
+
+Codex 는 [`.codex-plugin/plugin.json`](./plugins/ehr-yearend-harness/.codex-plugin/plugin.json) 에 선언된 `"skills": "./skills/"` 와 `"hooks": "./hooks/codex-hooks.json"` 을 진입점으로 본다. 이 플러그인은 Codex에 `agents/`를 직접 노출하지 않는다.
+
+그래서 `yearend-investigator`는 Codex에서 별도 subagent가 아니라 [`skills/yearend-investigator/SKILL.md`](./plugins/ehr-yearend-harness/skills/yearend-investigator/SKILL.md) wrapper skill 로 제공된다. 이 wrapper가 기존 Claude agent 지침을 읽어 같은 조사 절차를 메인 Codex 흐름 안에서 수행한다.
+
+이렇게 둔 이유는 단순하다. `yearend-investigator`의 주 역할은 병렬 작업자라기보다 후속조치 정리, 현 상태 확인, 영향 조사, 플랜 초안 작성이라는 **업무 절차**다. Codex에서는 이런 단일 흐름은 skill이 더 가볍고, 여러 건을 독립 조사자로 병렬 분석할 때만 native subagent가 더 어울린다.
+
+---
+
+## 설치 — `ehr-yearend-harness` 단독
+
+### Claude Code
 
 타깃 EHR 프로젝트(예: `EHR_HR50`)에서 Claude Code 를 켠 뒤:
 
@@ -46,6 +60,24 @@
 ```
 
 > 끝의 `@ehr-harness-yearend` 는 *marketplace 이름*, 그 앞이 *플러그인 이름*. 헷갈리기 쉬우니 주의.
+
+### Codex
+
+Codex 에서는 repo-local marketplace 를 추가한 뒤 `/plugins` 에서 설치한다.
+
+```
+codex plugin marketplace add https://github.com/jinyelimy/ehr-harness-yearend
+```
+
+이 저장소에는 Codex용 marketplace 파일([`.agents/plugins/marketplace.json`](./.agents/plugins/marketplace.json))과
+plugin manifest([`plugins/ehr-yearend-harness/.codex-plugin/plugin.json`](./plugins/ehr-yearend-harness/.codex-plugin/plugin.json))가 포함되어 있다.
+
+DB 차단 hook 까지 쓰려면 Codex 설정에 hooks feature flag 를 켠다.
+
+```toml
+[features]
+codex_hooks = true
+```
 
 검증:
 
@@ -84,13 +116,14 @@ ehr-harness-yearend/
 │   │   ├── profiles/                 ← EHR4 / EHR5 프로파일
 │   │   ├── scripts/
 │   │   └── skills/
-│   └── ehr-yearend-harness/          ← yearend 도메인 전용 v0.3.1
+│   └── ehr-yearend-harness/          ← yearend 도메인 전용 v0.4.0
 │       ├── README.md                 ← yearend 자체 안내 (단독 사용자 가이드)
+│       ├── .codex-plugin/            ← Codex plugin manifest
 │       ├── references/               ← yjungsan 사실 사전 (tables, packages, close-chain, glossary, tax-calc-rules, test-data, customer-variants)
-│       ├── skills/                   ← yearend-domain-map / yearend-chain-tracer / yearend-plan-first
-│       ├── agents/                   ← yearend-investigator
-│       ├── hooks/                    ← PreToolUse(Bash) 훅
-│       └── scripts/                  ← db-read-only.sh
+│       ├── skills/                   ← yearend-domain-map / yearend-chain-tracer / yearend-plan-first / yearend-investigator(Codex wrapper)
+│       ├── agents/                   ← yearend-investigator(Claude agent)
+│       ├── hooks/                    ← Claude/Codex PreToolUse(Bash) 훅
+│       └── scripts/                  ← db-read-only.sh / db-read-only.ps1
 ├── scripts/                           ← (개발 모드) 정션 스크립트 — TF 일반 사용자는 불필요
 ├── README.md                          ← 본 문서
 └── NOTICE.md                          ← 원본 출처 표기
