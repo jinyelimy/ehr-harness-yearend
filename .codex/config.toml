@@ -1,0 +1,6 @@
+# Project-local Codex settings for this harness repository.
+# Hooks are required for the Codex db-read-only guard declared by
+# plugins/ehr-yearend-harness/hooks/codex-hooks.json.
+
+[features]
+codex_hooks = true

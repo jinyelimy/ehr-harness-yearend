@@ -31,7 +31,7 @@ codex plugin marketplace add https://github.com/jinyelimy/ehr-harness-yearend
 그 뒤 Codex 의 `/plugins` 화면에서 **EHR Harness Yearend** marketplace 를 열고
 `ehr-yearend-harness` 를 설치한다.
 
-Codex 에서 `db-read-only` hook 까지 쓰려면 `~/.codex/config.toml` 또는 프로젝트 `.codex/config.toml` 에 hooks feature flag 가 켜져 있어야 한다.
+Codex 에서 `db-read-only` hook 까지 쓰려면 `~/.codex/config.toml` 또는 프로젝트 `.codex/config.toml` 에 hooks feature flag 가 켜져 있어야 한다. 파일이 없으면 직접 만들면 된다.
 
 ```toml
 [features]

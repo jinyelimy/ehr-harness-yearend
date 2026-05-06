@@ -72,7 +72,7 @@ codex plugin marketplace add https://github.com/jinyelimy/ehr-harness-yearend
 이 저장소에는 Codex용 marketplace 파일([`.agents/plugins/marketplace.json`](./.agents/plugins/marketplace.json))과
 plugin manifest([`plugins/ehr-yearend-harness/.codex-plugin/plugin.json`](./plugins/ehr-yearend-harness/.codex-plugin/plugin.json))가 포함되어 있다.
 
-DB 차단 hook 까지 쓰려면 Codex 설정에 hooks feature flag 를 켠다.
+DB 차단 hook 까지 쓰려면 Codex 설정에 hooks feature flag 를 켠다. 이 저장소에는 프로젝트 로컬 설정([`.codex/config.toml`](./.codex/config.toml))을 포함해 두었다. 다른 EHR 프로젝트에서 쓰려면 해당 프로젝트에도 같은 파일을 만들거나, 전역 설정(`~/.codex/config.toml`)에 추가한다.
 
 ```toml
 [features]
