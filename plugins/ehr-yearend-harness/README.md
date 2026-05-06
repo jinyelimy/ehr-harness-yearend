@@ -8,12 +8,16 @@
 
 ## 설치
 
-### 한 번에 Claude + Codex 적용 (권장)
+레포 루트에서 OS 에 맞는 통합 설치자를 한 번 실행한다.
 
-레포 루트에서 설치자를 한 번 실행한다.
-
+**Windows (PowerShell)**
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-all.ps1
+```
+
+**macOS / Linux (bash)**
+```bash
+bash scripts/install-all.sh
 ```
 
 이 설치자는 같은 `ehr-yearend-harness` 구조를 양쪽에 동시에 적용한다.
@@ -21,47 +25,14 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-all.ps1
 | 대상 | 설치자가 하는 일 |
 |---|---|
 | Claude Code | `ehr-yearend-harness@ehr-harness-yearend` 를 user plugin 으로 enable 하고, 현재 plugin version cache 를 구성 |
-| Codex | `~/.codex/config.toml` 에 local marketplace, plugin enable, `codex_hooks = true` 를 기록 |
+| Codex | `~/.codex/config.toml` 에 local marketplace(`source` 자동 산출), plugin enable, `codex_hooks = true` 를 기록 |
 
 실행 후 Claude Code 와 Codex 를 새로 시작하면 된다. 다시 실행해도 중복 블록을 만들지 않고 같은 상태로 갱신된다.
 
-### 수동 설치: Claude Code
-
-타깃 EHR 프로젝트(예: `EHR_HR50`)에서 Claude Code 를 켠 뒤:
-
-```
-/plugin marketplace add https://github.com/jinyelimy/ehr-harness-yearend
-/plugin install ehr-yearend-harness@ehr-harness-yearend
-```
-
-> 끝의 `@ehr-harness-yearend` 는 *marketplace 이름*, 그 앞이 *플러그인 이름* 이다.
-
-### 수동 설치: Codex
-
-현재 확인한 Codex CLI `0.120.0` 기준으로는 `codex plugin marketplace add ...` 명령이 없다. 이 저장소를 clone 한 뒤 `~/.codex/config.toml` 에 로컬 marketplace 와 plugin enable 항목을 추가한다.
-
-```toml
-# ~/.codex/config.toml
-
-[marketplaces.ehr-harness-yearend]
-source_type = "local"
-source = 'C:\yelingg\ehr-harness-yearend'
-
-[plugins."ehr-yearend-harness@ehr-harness-yearend"]
-enabled = true
-```
-
-다른 PC나 다른 clone 경로에서는 `source` 만 해당 저장소 경로로 바꾼다. 설정 후 Codex 를 새로 시작하면 **EHR Harness Yearend** marketplace 의 `ehr-yearend-harness` 가 활성화된다.
-
-Codex 에서 `db-read-only` hook 까지 쓰려면 `~/.codex/config.toml` 또는 프로젝트 `.codex/config.toml` 에 hooks feature flag 가 켜져 있어야 한다. 파일이 없으면 직접 만들면 된다.
-
-```toml
-[features]
-codex_hooks = true
-```
-
 > Codex용 manifest 는 [`.codex-plugin/plugin.json`](.codex-plugin/plugin.json) 이고,
 > Claude용 manifest 는 [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) 이다.
+>
+> **수동 설치는 비권장** — 과거 안내하던 `/plugin marketplace add` (Claude) / `~/.codex/config.toml` 직접 편집 (Codex) 흐름은 경로·feature flag 누락 함정이 많아 더 이상 메인 경로로 안내하지 않는다. 양쪽 런타임을 일관되게 구성하는 *유일한 권장 경로* 는 위의 통합 설치자다.
 
 ## 검증
 

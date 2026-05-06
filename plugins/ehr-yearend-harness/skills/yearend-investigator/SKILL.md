@@ -3,7 +3,13 @@ name: yearend-investigator
 description: Codex에서 연말정산(yjungsan) 도메인의 서술형·복합 조사, 후속조치/JIRA/메신저 원문 정리, 개정세법 영향도, 장애 원인 후보, 패치 플랜 초안을 처리하는 워크플로우 스킬. "후속조치 건 정리", "기존 반영 여부 확인", "개정세법 영향도", "장애 조사", "출산지원금 반영 플랜", "연말정산 이슈 조사" 요청에 사용. 실제 코드/DDL 수정은 하지 않고 yearend-plan-first 정책으로 넘긴다.
 ---
 
-# Yearend Investigator
+# Yearend Investigator (Codex wrapper)
+
+> ⚠️ **이 파일은 thin wrapper 이다 — 절차의 정본이 아니다.** ⚠️
+>
+> 절차·정책·출력 템플릿의 *유일한 정본* 은 `../../agents/yearend-investigator.md` 다.
+> 새 정책은 정본 파일에서만 수정한다. 이 SKILL.md 에 절차를 복제·재기술하지 말 것 (drift 방지).
+> 이 파일의 역할은 ① Codex 진입을 받음 ② 정본 파일을 읽으라고 지시함 ③ Codex 환경의 도구 매핑을 안내함, 세 가지뿐이다.
 
 Codex용 `yearend-investigator`는 Claude의 `agents/yearend-investigator.md`를
 별도 subagent로 띄우지 않고, **메인 Codex가 그대로 따르는 조사 워크플로우**로 적용하는

@@ -6,9 +6,15 @@ tools: Read, Glob, Grep, Bash
 
 # Yearend Investigator
 
-> Codex 에서는 이 파일을 직접 agent 로 로딩하지 않는다. Codex 진입점은
-> `skills/yearend-investigator/SKILL.md` 이며, 그 wrapper skill 이 이 파일을
-> 상세 조사 지침으로 읽는다. Claude Code 에서는 이 파일 자체가 agent 진입점이다.
+> ⚠️ **SOURCE-OF-TRUTH** ⚠️
+>
+> 이 파일은 `yearend-investigator` 의 절차·정책·출력 템플릿의 **유일한 정본** 이다.
+> 절차 변경은 *반드시 이 파일에서만* 한다.
+>
+> - **Claude Code**: 이 파일이 agent 진입점이다. Claude 가 이 파일 본문을 system prompt 로 로딩한다.
+> - **Codex**: 진입점은 `skills/yearend-investigator/SKILL.md` 이며, 그 wrapper skill 이 이 파일을 명시적으로 읽고 같은 절차를 메인 Codex 흐름에서 수행한다.
+>
+> 결과적으로 두 런타임 모두 *이 파일* 을 읽는다. SKILL.md 는 정책을 복제하지 않는다 (drift 방지). 새 정책을 SKILL.md 에 직접 적지 말 것.
 
 연말정산 도메인의 실무 조사와 영향도 분석, 그리고 후속 플래너에게 넘기기 위한 **패치 플랜 초안** 작성을 담당하는 에이전트다.
 
